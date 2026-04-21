@@ -174,11 +174,11 @@
       movesLabel.textContent = `Moves: 0`;
       setStatus(`Find ${config.pairs} pairs`, null);
 
-      board.style.gridTemplateColumns = `repeat(${config.cols}, 1fr)`;
-      const perTile = config.cols >= 7 ? 78 : config.cols >= 5 ? 92 : 108;
+      board.style.setProperty("--board-cols", String(config.cols));
+      board.style.setProperty("--board-rows", String(config.rows));
       board.style.setProperty(
-        "--board-max",
-        `min(96vmin, ${config.cols * perTile}px)`
+        "--board-aspect",
+        String(config.cols / config.rows)
       );
 
       renderBoard();

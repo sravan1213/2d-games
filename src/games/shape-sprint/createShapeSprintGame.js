@@ -145,8 +145,9 @@
       activeTarget = picks[Math.floor(Math.random() * picks.length)];
       const targetPos = Math.floor(Math.random() * cells);
 
-      board.style.gridTemplateColumns = `repeat(${gridSize}, 1fr)`;
-      board.style.setProperty("--shape-board-max", `min(96vmin, ${gridSize * 96}px)`);
+      board.style.setProperty("--shape-cols", String(gridSize));
+      board.style.setProperty("--shape-rows", String(gridSize));
+      board.style.setProperty("--shape-aspect", "1");
       board.innerHTML = "";
 
       targetPreview.innerHTML = `
