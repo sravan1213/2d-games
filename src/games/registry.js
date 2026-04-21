@@ -1,6 +1,7 @@
 (function () {
   const memoryGame = window.Playlab?.games?.memory?.createMemoryGame;
   const shapeSprintGame = window.Playlab?.games?.shapeSprint?.createShapeSprintGame;
+  const colorPopGame = window.Playlab?.games?.colorPop?.createColorPopGame;
 
   const gameRegistry = [
     {
@@ -29,12 +30,12 @@
       id: "color-pop",
       name: "Color Pop",
       tagline: "Pop the matching colors",
-      description: "Match colors and pop them fast. Coming soon.",
+      description: "Tap the target color quickly before time runs out.",
       icon: "🎨",
       tags: ["Ages 4+", "Focus"],
-      status: "Coming Soon",
+      status: "New",
       theme: { from: "#ffb54c", to: "#ff6fb5" },
-      comingSoon: true,
+      launch: colorPopGame,
     },
     {
       id: "word-whiz",

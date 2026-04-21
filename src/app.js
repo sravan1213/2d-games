@@ -21,7 +21,7 @@
     gameShell.classList.add("hidden");
     landingScreen.classList.remove("hidden");
     document.body.classList.remove("is-playing");
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }
 
   function openGame(gameId) {
@@ -31,6 +31,9 @@
     if (!game) return;
 
     if (audio) audio.play("click");
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
     landingScreen.classList.add("hidden");
     gameShell.classList.remove("hidden");
     gameTitle.textContent = game.name;
@@ -39,7 +42,9 @@
     if (activeGameInstance) activeGameInstance.destroy();
     activeGameInstance = game.launch({ container: gameMount });
 
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    });
   }
 
   function renderGameCards() {
