@@ -1,29 +1,44 @@
 (function () {
   const symbols = [
-    "🐶",
-    "🐱",
-    "🐼",
-    "🦊",
-    "🐸",
-    "🦁",
-    "🍎",
-    "🍌",
-    "🍓",
-    "🍇",
-    "⭐",
-    "🔺",
-    "🔵",
-    "🟩",
-    "🌙",
-    "☀️",
+    "🐶", "🐱", "🐼", "🦊", "🐸", "🦁", "🐵", "🐨",
+    "🐯", "🐻", "🦄", "🐢", "🐝", "🐙", "🐞", "🦋",
+    "🐳", "🐧", "🦀", "🐠",
+    "🍎", "🍌", "🍓", "🍇", "🍉", "🍊", "🍋", "🍒",
+    "🥝", "🍑", "🥥", "🍍",
+    "⭐", "🌙", "☀️", "🌈", "⚡", "🔥", "💎", "🎈",
+    "🎁", "🎀",
   ];
 
-  const fixedLevels = [
-    { rows: 2, cols: 2, pairs: 2 },
-    { rows: 2, cols: 3, pairs: 3 },
-    { rows: 3, cols: 4, pairs: 6 },
-    { rows: 4, cols: 4, pairs: 8 },
-  ];
+  // Layout rule: square (n × n) or near-square (|rows − cols| = 1).
+  // Sequence: 2×2 → 2×3 → 3×4 → 4×4 → 4×5 → 5×6 → 6×6 → 6×7 → 7×8 → 8×8 → …
+  function getLevelConfig(currentLevel) {
+    const safeLevel = Math.max(1, currentLevel);
+    const index = safeLevel - 1;
+    const chunk = Math.floor(index / 3);
+    const phase = index % 3;
+    const base = 2 + 2 * chunk;
+
+    let rows;
+    let cols;
+    if (phase === 0) {
+      rows = base;
+      cols = base;
+    } else if (phase === 1) {
+      rows = base;
+      cols = base + 1;
+    } else {
+      rows = base + 1;
+      cols = base + 2;
+    }
+
+    const totalTiles = rows * cols;
+    let pairs = totalTiles / 2;
+
+    const maxPairs = symbols.length;
+    if (pairs > maxPairs) pairs = maxPairs;
+
+    return { rows, cols, pairs };
+  }
 
   function shuffle(array) {
     const copy = [...array];
@@ -32,25 +47,6 @@
       [copy[i], copy[j]] = [copy[j], copy[i]];
     }
     return copy;
-  }
-
-  function getGridSizeFromTileCount(tileCount) {
-    let rows = Math.floor(Math.sqrt(tileCount));
-    while (rows > 1 && tileCount % rows !== 0) {
-      rows -= 1;
-    }
-    const cols = tileCount / rows;
-    return rows <= cols ? { rows, cols } : { rows: cols, cols: rows };
-  }
-
-  function getLevelConfig(currentLevel) {
-    if (currentLevel <= fixedLevels.length) {
-      return fixedLevels[currentLevel - 1];
-    }
-    const pairs = 8 + (currentLevel - fixedLevels.length);
-    const tileCount = pairs * 2;
-    const { rows, cols } = getGridSizeFromTileCount(tileCount);
-    return { rows, cols, pairs };
   }
 
   function buildTiles(pairCount) {
@@ -179,12 +175,11 @@
       setStatus(`Find ${config.pairs} pairs`, null);
 
       board.style.gridTemplateColumns = `repeat(${config.cols}, 1fr)`;
-      const minTile = config.cols >= 4 ? 56 : 72;
+      const perTile = config.cols >= 7 ? 78 : config.cols >= 5 ? 92 : 108;
       board.style.setProperty(
         "--board-max",
-        `min(92vmin, ${config.cols * 110}px)`
+        `min(96vmin, ${config.cols * perTile}px)`
       );
-      board.style.setProperty("--tile-min", `${minTile}px`);
 
       renderBoard();
     }
