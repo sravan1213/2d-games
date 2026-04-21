@@ -50,6 +50,16 @@
         <a href="#parents">For Parents</a>
       </nav>
       <div class="header-actions">
+        <button
+          id="sound-toggle"
+          class="icon-button"
+          type="button"
+          aria-label="Toggle sound"
+          aria-pressed="false"
+          title="Sound on/off"
+        >
+          <span id="sound-icon" aria-hidden="true">🔊</span>
+        </button>
         <button id="install-button" class="install-button hidden" type="button" aria-label="Install Playlab as an app">
           <span class="install-icon" aria-hidden="true">⬇</span>
           <span>Install App</span>
@@ -188,6 +198,7 @@
       <p class="muted">© Playlab</p>
     </footer>
 
+    <script src="./src/sound.js"></script>
     <script src="./src/games/memory/createMemoryGame.js"></script>
     <script src="./src/games/registry.js"></script>
     <script src="./src/app.js"></script>

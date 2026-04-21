@@ -64,6 +64,8 @@
     return shuffle(tileSet);
   }
 
+  const audio = () => window.Playlab && window.Playlab.audio;
+
   function createMemoryGame({ container }) {
     container.innerHTML = `
       <section class="memory-game">
@@ -188,6 +190,8 @@
     function completeLevel() {
       isBoardLocked = true;
       setStatus("🎉 Great job! Next level starts soon...", "win");
+      const a = audio();
+      if (a) a.play("win");
       transitionTimer = setTimeout(() => {
         level += 1;
         startLevel(level);
@@ -207,6 +211,8 @@
         setTileState(secondTile.id, { isMatched: true });
         matchCount += 1;
         setStatus("Nice match!", "match");
+        const a = audio();
+        if (a) a.play("match");
         renderBoard();
         resetRoundState();
 
@@ -217,6 +223,8 @@
       }
 
       setStatus("Try again!", "miss");
+      const a = audio();
+      if (a) a.play("miss");
       shakeTiles([firstTile.id, secondTile.id]);
       transitionTimer = setTimeout(() => {
         setTileState(firstTile.id, { isFlipped: false });
@@ -230,6 +238,9 @@
       if (isBoardLocked) return;
       const selected = tiles.find((tile) => tile.id === tileId);
       if (!selected || selected.isFlipped || selected.isMatched) return;
+
+      const a = audio();
+      if (a) a.play("flip");
 
       setTileState(tileId, { isFlipped: true });
       renderBoard();
@@ -246,7 +257,11 @@
       evaluateRound();
     }
 
-    restartButton.addEventListener("click", () => startLevel(level));
+    restartButton.addEventListener("click", () => {
+      const a = audio();
+      if (a) a.play("click");
+      startLevel(level);
+    });
     startLevel(level);
 
     return {

@@ -10,11 +10,14 @@
 
   let activeGameInstance = null;
 
+  const audio = window.Playlab && window.Playlab.audio;
+
   function showLanding() {
     if (activeGameInstance) {
       activeGameInstance.destroy();
       activeGameInstance = null;
     }
+    if (audio) audio.play("click");
     gameShell.classList.add("hidden");
     landingScreen.classList.remove("hidden");
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -26,6 +29,7 @@
     );
     if (!game) return;
 
+    if (audio) audio.play("click");
     landingScreen.classList.add("hidden");
     gameShell.classList.remove("hidden");
     gameTitle.textContent = game.name;
@@ -84,9 +88,29 @@
   if (backButton) backButton.addEventListener("click", showLanding);
   renderGameCards();
 
-  // PWA install + service worker
+  setupSoundToggle();
   setupInstallExperience();
   registerServiceWorker();
+
+  function setupSoundToggle() {
+    const button = document.getElementById("sound-toggle");
+    const icon = document.getElementById("sound-icon");
+    if (!button || !icon || !audio) return;
+
+    function paint() {
+      const off = audio.isMuted();
+      icon.textContent = off ? "🔇" : "🔊";
+      button.setAttribute("aria-pressed", String(off));
+      button.title = off ? "Sound off" : "Sound on";
+    }
+
+    paint();
+    button.addEventListener("click", () => {
+      audio.toggleMuted();
+      paint();
+      if (!audio.isMuted()) audio.play("click");
+    });
+  }
 
   function setupInstallExperience() {
     const installButton = document.getElementById("install-button");

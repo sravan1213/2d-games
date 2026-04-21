@@ -161,6 +161,32 @@ body {
   gap: 10px;
 }
 
+.icon-button {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid var(--border-soft);
+  background: white;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+  box-shadow: var(--shadow-sm);
+  transition: transform 140ms ease, border-color 140ms ease, background 140ms ease;
+  padding: 0;
+  line-height: 1;
+}
+
+.icon-button:hover {
+  transform: translateY(-2px);
+  border-color: #ddd3ff;
+}
+
+.icon-button[aria-pressed="true"] {
+  background: #fff1f7;
+  border-color: #ffd1e6;
+}
+
 .install-button {
   display: inline-flex;
   align-items: center;
