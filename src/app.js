@@ -83,4 +83,100 @@
 
   if (backButton) backButton.addEventListener("click", showLanding);
   renderGameCards();
+
+  // PWA install + service worker
+  setupInstallExperience();
+  registerServiceWorker();
+
+  function setupInstallExperience() {
+    const installButton = document.getElementById("install-button");
+    const iosSheet = document.getElementById("ios-install-sheet");
+    if (!installButton || !iosSheet) return;
+
+    const ua = window.navigator.userAgent || "";
+    const isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+    const isStandalone =
+      window.matchMedia("(display-mode: standalone)").matches ||
+      window.navigator.standalone === true;
+
+    let deferredPrompt = null;
+
+    function showButton() {
+      installButton.classList.remove("hidden");
+    }
+
+    function hideButton() {
+      installButton.classList.add("hidden");
+    }
+
+    function openIosSheet() {
+      iosSheet.classList.remove("hidden");
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeIosSheet() {
+      iosSheet.classList.add("hidden");
+      document.body.style.overflow = "";
+    }
+
+    iosSheet.querySelectorAll("[data-close-ios]").forEach((el) => {
+      el.addEventListener("click", closeIosSheet);
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && !iosSheet.classList.contains("hidden")) {
+        closeIosSheet();
+      }
+    });
+
+    if (isStandalone) {
+      hideButton();
+      return;
+    }
+
+    window.addEventListener("beforeinstallprompt", (event) => {
+      event.preventDefault();
+      deferredPrompt = event;
+      showButton();
+    });
+
+    installButton.addEventListener("click", async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        try {
+          await deferredPrompt.userChoice;
+        } catch (_) {
+          // ignore
+        }
+        deferredPrompt = null;
+        hideButton();
+        return;
+      }
+      if (isIOS) {
+        openIosSheet();
+        return;
+      }
+      openIosSheet();
+    });
+
+    window.addEventListener("appinstalled", () => {
+      deferredPrompt = null;
+      hideButton();
+    });
+
+    if (isIOS) {
+      showButton();
+    }
+  }
+
+  function registerServiceWorker() {
+    if (!("serviceWorker" in navigator)) return;
+    if (location.protocol === "file:") return;
+
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./sw.js").catch(() => {
+        // offline support is a nicety; ignore failures
+      });
+    });
+  }
 })();

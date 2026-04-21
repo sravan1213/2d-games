@@ -155,6 +155,44 @@ body {
   color: var(--text);
 }
 
+.header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.install-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: none;
+  font-weight: 800;
+  font-size: 0.85rem;
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--brand), var(--brand-2));
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(124, 92, 255, 0.35);
+  transition: transform 140ms ease, box-shadow 140ms ease;
+}
+
+.install-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 26px rgba(124, 92, 255, 0.45);
+}
+
+.install-button .install-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  font-size: 11px;
+  font-weight: 900;
+}
+
 .no-ads-pill {
   display: inline-flex;
   align-items: center;
@@ -843,4 +881,145 @@ button[disabled] {
     font-size: 0.8rem;
     padding: 6px 10px;
   }
+
+  .install-button {
+    padding: 6px 10px;
+    font-size: 0.75rem;
+  }
+
+  .install-button span:last-child {
+    display: none;
+  }
+
+  .install-button .install-icon {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+/* Standalone / installed-app tweaks */
+@media (display-mode: standalone) {
+  .site-header {
+    padding-top: calc(18px + env(safe-area-inset-top));
+  }
+
+  .site-footer {
+    padding-bottom: calc(40px + env(safe-area-inset-bottom));
+  }
+
+  .install-button {
+    display: none !important;
+  }
+}
+
+/* iOS install sheet */
+.ios-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: end center;
+}
+
+.ios-sheet.hidden {
+  display: none !important;
+}
+
+.ios-sheet-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(36, 33, 61, 0.45);
+  backdrop-filter: blur(4px);
+  animation: fadeIn 200ms ease;
+}
+
+.ios-sheet-card {
+  position: relative;
+  width: min(460px, 100%);
+  background: white;
+  border-radius: 28px 28px 0 0;
+  padding: 24px 22px calc(28px + env(safe-area-inset-bottom));
+  box-shadow: 0 -20px 50px rgba(36, 33, 61, 0.25);
+  animation: slideUp 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(24px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.ios-sheet-card h3 {
+  margin: 0 0 16px;
+  font-family: "Fredoka", "Nunito", sans-serif;
+  font-size: 1.35rem;
+  padding-right: 28px;
+}
+
+.ios-sheet-close {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: #f3efff;
+  color: #5d47c9;
+  font-size: 1.4rem;
+  font-weight: 800;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.ios-steps {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 14px;
+  display: grid;
+  gap: 12px;
+}
+
+.ios-steps li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #faf8ff;
+  border: 2px solid var(--border-soft);
+  border-radius: 16px;
+  padding: 12px 14px;
+  line-height: 1.45;
+}
+
+.step-num {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--brand), var(--brand-2));
+  color: white;
+  font-weight: 800;
+  font-size: 0.85rem;
+  display: grid;
+  place-items: center;
+}
+
+.ios-share {
+  display: inline-block;
+  padding: 1px 7px;
+  border-radius: 7px;
+  background: #eef3ff;
+  color: #2f60c7;
+  font-weight: 800;
+}
+
+.ios-note {
+  margin: 0;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.9rem;
 }

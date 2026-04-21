@@ -2,12 +2,23 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Playlab — Fun 2D Games for Kids. No Ads. Ever.</title>
     <meta
       name="description"
       content="Playlab is a free, safe gaming site for kids with handcrafted 2D games. No ads, no tracking, just fun."
     />
+
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <meta name="theme-color" content="#7c5cff" />
+    <meta name="color-scheme" content="light" />
+    <link rel="icon" type="image/svg+xml" href="./icons/icon.svg" />
+    <link rel="apple-touch-icon" href="./icons/icon.svg" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Playlab" />
+    <meta name="mobile-web-app-capable" content="yes" />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -38,10 +49,45 @@
         <a href="#why">Why Playlab</a>
         <a href="#parents">For Parents</a>
       </nav>
-      <span class="no-ads-pill" title="No ads. No tracking. Ever.">
-        <span class="dot"></span> No Ads. Ever.
-      </span>
+      <div class="header-actions">
+        <button id="install-button" class="install-button hidden" type="button" aria-label="Install Playlab as an app">
+          <span class="install-icon" aria-hidden="true">⬇</span>
+          <span>Install App</span>
+        </button>
+        <span class="no-ads-pill" title="No ads. No tracking. Ever.">
+          <span class="dot"></span> No Ads. Ever.
+        </span>
+      </div>
     </header>
+
+    <div
+      id="ios-install-sheet"
+      class="ios-sheet hidden"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="ios-install-title"
+    >
+      <div class="ios-sheet-backdrop" data-close-ios></div>
+      <div class="ios-sheet-card">
+        <button class="ios-sheet-close" type="button" data-close-ios aria-label="Close">×</button>
+        <h3 id="ios-install-title">Add Playlab to your Home Screen</h3>
+        <ol class="ios-steps">
+          <li>
+            <span class="step-num">1</span>
+            <span>Tap the <strong>Share</strong> button <span class="ios-share" aria-hidden="true">⇪</span> in Safari.</span>
+          </li>
+          <li>
+            <span class="step-num">2</span>
+            <span>Scroll and choose <strong>Add to Home Screen</strong>.</span>
+          </li>
+          <li>
+            <span class="step-num">3</span>
+            <span>Tap <strong>Add</strong> — Playlab now opens like an app.</span>
+          </li>
+        </ol>
+        <p class="ios-note">Works best in Safari on iPhone or iPad.</p>
+      </div>
+    </div>
 
     <main class="app" id="top">
       <section id="landing-screen">

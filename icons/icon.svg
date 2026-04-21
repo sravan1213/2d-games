@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#7c5cff"/>
+      <stop offset="60%" stop-color="#a48bff"/>
+      <stop offset="100%" stop-color="#ff6fb5"/>
+    </linearGradient>
+    <radialGradient id="shine" cx="0.25" cy="0.2" r="0.7">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.55"/>
+      <stop offset="60%" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <rect width="512" height="512" rx="112" fill="url(#shine)"/>
+
+  <g transform="translate(88 132)">
+    <rect x="0" y="0" width="336" height="208" rx="64" fill="#ffffff" opacity="0.96"/>
+    <rect x="0" y="0" width="336" height="208" rx="64" fill="none" stroke="#ffffff" stroke-opacity="0.55" stroke-width="4"/>
+
+    <circle cx="78" cy="104" r="30" fill="#efe9ff"/>
+    <rect x="63" y="89"  width="30" height="30" rx="6" fill="#7c5cff"/>
+    <rect x="63" y="89"  width="30" height="30" rx="6" fill="url(#shine)"/>
+
+    <circle cx="258" cy="68"  r="16" fill="#ff6fb5"/>
+    <circle cx="296" cy="104" r="16" fill="#ffb54c"/>
+    <circle cx="258" cy="140" r="16" fill="#3ecfc0"/>
+    <circle cx="220" cy="104" r="16" fill="#7c5cff"/>
+  </g>
+
+  <g fill="#ffffff" opacity="0.9">
+    <circle cx="112" cy="90"  r="6"/>
+    <circle cx="420" cy="110" r="5"/>
+    <circle cx="96"  cy="420" r="5"/>
+    <circle cx="430" cy="396" r="7"/>
+  </g>
+</svg>

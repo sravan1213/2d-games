@@ -1,0 +1,27 @@
+{
+  "name": "Playlab — Kids Games",
+  "short_name": "Playlab",
+  "description": "Tiny 2D games for kids. No ads. No tracking. Just fun.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fff8f1",
+  "theme_color": "#7c5cff",
+  "categories": ["games", "kids", "entertainment"],
+  "lang": "en",
+  "icons": [
+    {
+      "src": "./icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}
