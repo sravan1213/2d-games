@@ -662,42 +662,87 @@ button[disabled] {
   margin: 0 auto;
 }
 
+.game-shell {
+  width: min(720px, 100%);
+  margin: 0 auto;
+  padding: clamp(8px, 2vw, 20px) 0 40px;
+}
+
 .shell-header {
-  display: flex;
+  display: grid;
+  grid-template-columns: 44px 1fr 44px;
   align-items: center;
-  justify-content: space-between;
   gap: 12px;
-  margin-bottom: 14px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #eee7ff;
+  margin-bottom: clamp(18px, 3vw, 28px);
+}
+
+.shell-spacer {
+  display: block;
+  width: 44px;
+  height: 44px;
 }
 
 .shell-title {
   margin: 0;
+  text-align: center;
   font-family: "Fredoka", "Nunito", sans-serif;
-  font-size: clamp(1.4rem, 3vw, 1.9rem);
-}
-
-.shell-back-link {
-  border: none;
-  background: transparent;
-  color: var(--muted);
-  font-weight: 800;
-  font-size: 0.92rem;
-  cursor: pointer;
-  padding: 4px 2px;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
-.shell-back-link:hover {
+  font-size: clamp(1.5rem, 3.2vw, 2rem);
   color: var(--text);
+  letter-spacing: -0.01em;
+}
+
+.shell-back {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid var(--border-soft);
+  background: #ffffff;
+  color: var(--muted);
+  font-size: 20px;
+  font-weight: 800;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  box-shadow: var(--shadow-sm);
+  transition: transform 140ms ease, color 140ms ease, border-color 140ms ease;
+  padding: 0;
+  line-height: 1;
+}
+
+.shell-back:hover {
+  color: var(--text);
+  border-color: #ddd3ff;
+  transform: translateX(-2px);
+}
+
+.game-mount {
+  width: 100%;
+}
+
+/* Focus mode when a game is active */
+body.is-playing .site-nav,
+body.is-playing .no-ads-pill,
+body.is-playing .floaty {
+  display: none !important;
+}
+
+body.is-playing .blob {
+  opacity: 0.18;
+}
+
+body.is-playing .site-footer {
+  display: none;
+}
+
+body.is-playing .site-header {
+  padding-top: 12px;
+  padding-bottom: 4px;
 }
 
 /* Memory game */
 .memory-game {
   display: grid;
-  gap: 14px;
+  gap: 18px;
 }
 
 .memory-header {
@@ -706,10 +751,7 @@ button[disabled] {
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
-  padding: 10px 12px;
-  border: 1px solid #ece4ff;
-  border-radius: 14px;
-  background: #fbf9ff;
+  padding: 0 4px;
 }
 
 .memory-meta {
@@ -765,10 +807,8 @@ button[disabled] {
 }
 
 .memory-board-wrap {
-  background: #ffffff;
-  border: 1px solid #ece4ff;
-  border-radius: 18px;
-  padding: clamp(10px, 1.8vw, 14px);
+  background: transparent;
+  padding: 0;
 }
 
 .tile {

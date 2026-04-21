@@ -182,14 +182,15 @@
         </section>
       </section>
 
-      <section id="game-shell" class="panel hidden">
+      <section id="game-shell" class="game-shell hidden">
         <header class="shell-header">
-          <h2 id="game-title" class="shell-title"></h2>
-          <button id="back-button" class="shell-back-link" type="button" aria-label="Back to all games">
-            All Games
+          <button id="back-button" class="shell-back" type="button" aria-label="Back to all games" title="All games">
+            <span aria-hidden="true">←</span>
           </button>
+          <h2 id="game-title" class="shell-title"></h2>
+          <span class="shell-spacer" aria-hidden="true"></span>
         </header>
-        <div id="game-mount"></div>
+        <div id="game-mount" class="game-mount"></div>
       </section>
     </main>
 

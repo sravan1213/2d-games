@@ -20,6 +20,7 @@
     if (audio) audio.play("click");
     gameShell.classList.add("hidden");
     landingScreen.classList.remove("hidden");
+    document.body.classList.remove("is-playing");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -33,6 +34,7 @@
     landingScreen.classList.add("hidden");
     gameShell.classList.remove("hidden");
     gameTitle.textContent = game.name;
+    document.body.classList.add("is-playing");
 
     if (activeGameInstance) activeGameInstance.destroy();
     activeGameInstance = game.launch({ container: gameMount });
