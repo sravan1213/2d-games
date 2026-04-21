@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Playlab — Fun 2D Games for Kids. No Ads. Ever.</title>
+    <meta
+      name="description"
+      content="Playlab is a free, safe gaming site for kids with handcrafted 2D games. No ads, no tracking, just fun."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="bg-decor" aria-hidden="true">
+      <span class="blob blob-1"></span>
+      <span class="blob blob-2"></span>
+      <span class="blob blob-3"></span>
+      <span class="floaty floaty-1">⭐</span>
+      <span class="floaty floaty-2">🎈</span>
+      <span class="floaty floaty-3">🪄</span>
+      <span class="floaty floaty-4">🌈</span>
+      <span class="floaty floaty-5">🍭</span>
+    </div>
+
+    <header class="site-header">
+      <a href="#top" class="brand">
+        <span class="brand-mark">🎮</span>
+        <span class="brand-name">Playlab</span>
+      </a>
+      <nav class="site-nav">
+        <a href="#games">Games</a>
+        <a href="#why">Why Playlab</a>
+        <a href="#parents">For Parents</a>
+      </nav>
+      <span class="no-ads-pill" title="No ads. No tracking. Ever.">
+        <span class="dot"></span> No Ads. Ever.
+      </span>
+    </header>
+
+    <main class="app" id="top">
+      <section id="landing-screen">
+        <div class="hero">
+          <div class="hero-copy">
+            <span class="eyebrow">✨ Made for little players</span>
+            <h1>
+              Tiny games. <span class="grad">Huge smiles.</span>
+            </h1>
+            <p class="lede">
+              A cozy little arcade of handcrafted 2D games for kids.
+              No ads. No pop-ups. No tracking. Just play.
+            </p>
+            <div class="hero-cta">
+              <a href="#games" class="primary-button big">Play a Game</a>
+              <a href="#why" class="ghost-button">Why parents love it</a>
+            </div>
+            <ul class="hero-badges">
+              <li><span>🛡️</span> Ad-free</li>
+              <li><span>🧒</span> Ages 4–10</li>
+              <li><span>📱</span> Works on any device</li>
+            </ul>
+          </div>
+          <div class="hero-art" aria-hidden="true">
+            <div class="hero-card card-a">🐼</div>
+            <div class="hero-card card-b">🍓</div>
+            <div class="hero-card card-c">⭐</div>
+            <div class="hero-card card-d">🦊</div>
+            <div class="sparkle s1">✦</div>
+            <div class="sparkle s2">✦</div>
+            <div class="sparkle s3">✦</div>
+          </div>
+        </div>
+
+        <section id="games" class="section">
+          <div class="section-head">
+            <h2>Pick a game</h2>
+            <p>More games added regularly. Always free. Always ad-free.</p>
+          </div>
+          <div id="games-grid" class="games-grid" aria-live="polite"></div>
+        </section>
+
+        <section id="why" class="section features">
+          <div class="section-head">
+            <h2>Why Playlab</h2>
+            <p>A calmer, safer corner of the internet for kids to play.</p>
+          </div>
+          <div class="feature-grid">
+            <article class="feature">
+              <span class="feature-icon">🚫</span>
+              <h3>Zero ads</h3>
+              <p>No banners, no pop-ups, no surprise videos. Promise.</p>
+            </article>
+            <article class="feature">
+              <span class="feature-icon">🔒</span>
+              <h3>No tracking</h3>
+              <p>No accounts required. No data collected. Just play.</p>
+            </article>
+            <article class="feature">
+              <span class="feature-icon">🎨</span>
+              <h3>Handcrafted</h3>
+              <p>Every game designed for kids — friendly, colorful, calm.</p>
+            </article>
+            <article class="feature">
+              <span class="feature-icon">📱</span>
+              <h3>Any device</h3>
+              <p>Plays smoothly on phones, tablets, and laptops.</p>
+            </article>
+          </div>
+        </section>
+
+        <section id="parents" class="section parent-note">
+          <div class="parent-card">
+            <h2>A note for parents</h2>
+            <p>
+              Playlab is a tiny, independent project built by someone who
+              believes kids deserve a calm, ad-free place to play. No accounts,
+              no data, no nonsense. If your child enjoys it, that's the whole
+              point.
+            </p>
+          </div>
+        </section>
+      </section>
+
+      <section id="game-shell" class="panel hidden">
+        <header class="shell-header">
+          <button id="back-button" class="ghost-button" type="button">
+            ← All Games
+          </button>
+          <h2 id="game-title" class="shell-title"></h2>
+        </header>
+        <div id="game-mount"></div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <p>Made with care. No ads, no tracking — ever.</p>
+      <p class="muted">© Playlab</p>
+    </footer>
+
+    <script src="./src/games/memory/createMemoryGame.js"></script>
+    <script src="./src/games/registry.js"></script>
+    <script src="./src/app.js"></script>
+  </body>
+</html>
