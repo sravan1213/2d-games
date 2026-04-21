@@ -76,7 +76,9 @@
           </div>
           <button id="memory-restart-button" class="secondary-button" type="button">Restart</button>
         </header>
-        <div id="memory-board" class="game-board" aria-live="polite"></div>
+        <div class="memory-board-wrap">
+          <div id="memory-board" class="game-board" aria-live="polite"></div>
+        </div>
         <p id="memory-status-message" class="memory-status"></p>
       </section>
     `;

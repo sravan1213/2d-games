@@ -184,10 +184,10 @@
 
       <section id="game-shell" class="panel hidden">
         <header class="shell-header">
-          <button id="back-button" class="ghost-button" type="button">
-            ← All Games
-          </button>
           <h2 id="game-title" class="shell-title"></h2>
+          <button id="back-button" class="shell-back-link" type="button" aria-label="Back to all games">
+            All Games
+          </button>
         </header>
         <div id="game-mount"></div>
       </section>
@@ -202,5 +202,15 @@
     <script src="./src/games/memory/createMemoryGame.js"></script>
     <script src="./src/games/registry.js"></script>
     <script src="./src/app.js"></script>
+
+    <script>
+      window.va =
+        window.va ||
+        function () {
+          (window.vaq = window.vaq || []).push(arguments);
+        };
+    </script>
+    <script defer src="/_vercel/insights/script.js"></script>
+    <script defer src="/_vercel/speed-insights/script.js"></script>
   </body>
 </html>
