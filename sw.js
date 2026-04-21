@@ -1,11 +1,13 @@
-const CACHE_VERSION = "playlab-v1";
+const CACHE_VERSION = "playlab-v2";
 const CORE_ASSETS = [
   "./",
   "./index.html",
   "./styles.css",
+  "./src/sound.js",
   "./src/app.js",
   "./src/games/registry.js",
   "./src/games/memory/createMemoryGame.js",
+  "./src/games/shape-sprint/createShapeSprintGame.js",
   "./manifest.webmanifest",
   "./icons/icon.svg",
   "./icons/icon-maskable.svg",

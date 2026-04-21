@@ -1,5 +1,6 @@
 (function () {
   const memoryGame = window.Playlab?.games?.memory?.createMemoryGame;
+  const shapeSprintGame = window.Playlab?.games?.shapeSprint?.createShapeSprintGame;
 
   const gameRegistry = [
     {
@@ -17,12 +18,12 @@
       id: "shape-sprint",
       name: "Shape Sprint",
       tagline: "Tap the right shape",
-      description: "A quick reflex shape game. Coming soon.",
+      description: "Find and tap the target shape before time runs out.",
       icon: "🔺",
       tags: ["Ages 5+", "Reflex"],
-      status: "Coming Soon",
+      status: "New",
       theme: { from: "#3ecfc0", to: "#7c5cff" },
-      comingSoon: true,
+      launch: shapeSprintGame,
     },
     {
       id: "color-pop",

@@ -2,7 +2,12 @@
   const STORAGE_KEY = "playlab-sound";
   let ctx = null;
   let masterGain = null;
-  let muted = localStorage.getItem(STORAGE_KEY) === "off";
+  let muted = false;
+  try {
+    muted = localStorage.getItem(STORAGE_KEY) === "off";
+  } catch (_) {
+    muted = false;
+  }
   const listeners = new Set();
 
   function ensureContext() {
@@ -122,13 +127,32 @@
 
   function play(name, options = {}) {
     const fn = sfx[name];
-    if (fn) fn();
-    if (options.vibrate !== false && VIBE[name]) vibrate(VIBE[name]);
+    if (!fn) return;
+
+    const run = () => {
+      fn();
+      if (options.vibrate !== false && VIBE[name]) vibrate(VIBE[name]);
+    };
+
+    const c = ensureContext();
+    if (!c) {
+      run();
+      return;
+    }
+    if (c.state === "suspended") {
+      c.resume().then(run).catch(run);
+      return;
+    }
+    run();
   }
 
   function setMuted(next) {
     muted = !!next;
-    localStorage.setItem(STORAGE_KEY, muted ? "off" : "on");
+    try {
+      localStorage.setItem(STORAGE_KEY, muted ? "off" : "on");
+    } catch (_) {
+      // ignore storage failures
+    }
     if (masterGain) {
       masterGain.gain.value = muted ? 0 : 0.9;
     }
