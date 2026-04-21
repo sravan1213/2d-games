@@ -1,18 +1,20 @@
 (function () {
   const COLORS = [
-    { name: "Red", hex: "#ff5a6e", highlight: "#ffb1bc" },
-    { name: "Blue", hex: "#4d7dff", highlight: "#aac1ff" },
-    { name: "Green", hex: "#44c988", highlight: "#a8e8c4" },
-    { name: "Yellow", hex: "#f8c74f", highlight: "#ffe29a" },
-    { name: "Purple", hex: "#9c6bff", highlight: "#d4bfff" },
-    { name: "Orange", hex: "#ff9c45", highlight: "#ffcf9b" },
+    { name: "Red", hex: "#e63946", highlight: "#ff8c95" },
+    { name: "Orange", hex: "#f77f00", highlight: "#ffc27a" },
+    { name: "Yellow", hex: "#ffd60a", highlight: "#fff29e" },
+    { name: "Green", hex: "#2dc653", highlight: "#9be8b0" },
+    { name: "Blue", hex: "#1d7af5", highlight: "#9fbcff" },
+    { name: "Purple", hex: "#8b2fff", highlight: "#c9a6ff" },
   ];
 
   const START_LIVES = 3;
-  const TARGET_CHANGES_EVERY_POPS = 5;
   const MAX_ACTIVE_BALLOONS = 10;
   const BALLOON_SIZE = 64;
   const BALLOON_STRING = 18;
+  const WAVE_GOAL = 5;
+  const LEVEL_COMPLETE_MS = 1300;
+  const NEW_LEVEL_INTRO_MS = 1700;
 
   const audio = () => window.Playlab && window.Playlab.audio;
   const canSpeak =
@@ -27,7 +29,7 @@
     try {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 0.92;
+      utterance.rate = 0.95;
       utterance.pitch = 1.1;
       utterance.volume = 1;
       window.speechSynthesis.speak(utterance);
@@ -47,6 +49,18 @@
 
   function hearts(lives) {
     return "❤".repeat(Math.max(0, lives)) || "💔";
+  }
+
+  function getWaveGoal() {
+    return WAVE_GOAL;
+  }
+
+  function getRiseSpeed(level) {
+    return Math.min(260, 60 + level * 14);
+  }
+
+  function getSpawnInterval(level) {
+    return Math.max(380, 1400 - level * 85);
   }
 
   function balloonSvg(color) {
@@ -86,6 +100,7 @@
         <div id="color-play-area" class="color-play-area" aria-live="polite">
           <div class="play-cloud play-cloud-a" aria-hidden="true"></div>
           <div class="play-cloud play-cloud-b" aria-hidden="true"></div>
+          <div id="color-banner" class="color-banner hidden" aria-live="polite"></div>
           <div id="color-overlay" class="color-overlay hidden"></div>
         </div>
 
@@ -99,22 +114,27 @@
     const targetPreview = container.querySelector("#color-target-preview");
     const playArea = container.querySelector("#color-play-area");
     const overlay = container.querySelector("#color-overlay");
+    const banner = container.querySelector("#color-banner");
     const statusMessage = container.querySelector("#color-status-message");
     const restartButton = container.querySelector("#color-restart-button");
 
+    // Phases: "intro" | "wave" | "waveComplete" | "transition" | "ended"
+    let phase = "intro";
     let score = 0;
     let lives = START_LIVES;
     let level = 1;
-    let ended = false;
-    let running = false;
     let target = pickRandom(COLORS);
-    let popsSinceTargetChange = 0;
+    let wavePops = 0;
+    let waveGoal = getWaveGoal(level);
+
     let balloons = [];
     let lastFrame = 0;
     let lastSpawn = 0;
     let rafId = 0;
+    let running = false;
     let areaWidth = 0;
     let areaHeight = 0;
+    let bannerTimer = null;
 
     function setStatus(text, variant) {
       statusMessage.textContent = text || "";
@@ -126,18 +146,6 @@
       const rect = playArea.getBoundingClientRect();
       areaWidth = rect.width;
       areaHeight = rect.height;
-    }
-
-    function getLevel() {
-      return 1 + Math.floor(score / 4);
-    }
-
-    function getRiseSpeed() {
-      return Math.min(260, 60 + level * 14);
-    }
-
-    function getSpawnInterval() {
-      return Math.max(380, 1400 - level * 85);
     }
 
     function paintMeta() {
@@ -153,16 +161,61 @@
       `;
     }
 
+    function clearBannerTimer() {
+      if (bannerTimer) {
+        clearTimeout(bannerTimer);
+        bannerTimer = null;
+      }
+    }
+
+    function showBanner(html, durationMs, onDone) {
+      banner.innerHTML = html;
+      banner.classList.remove("hidden");
+      clearBannerTimer();
+      bannerTimer = setTimeout(() => {
+        banner.classList.add("hidden");
+        bannerTimer = null;
+        if (onDone) onDone();
+      }, durationMs);
+    }
+
+    function showLevelIntroBanner(onDone) {
+      const swatch = `<span class="banner-swatch" style="background:${target.hex}"></span>`;
+      showBanner(
+        `<div class="banner-card">
+           <h3>Level ${level}</h3>
+           <p>Pop the</p>
+           ${swatch}
+           <p class="banner-color-name">${target.name}</p>
+         </div>`,
+        NEW_LEVEL_INTRO_MS,
+        onDone
+      );
+      speak(`Level ${level}. Find the ${target.name} balloons.`);
+    }
+
+    function showLevelCompleteBanner(onDone) {
+      showBanner(
+        `<div class="banner-card banner-win">
+           <h3>Level ${level} Complete!</h3>
+           <p>Nice popping!</p>
+         </div>`,
+        LEVEL_COMPLETE_MS,
+        onDone
+      );
+      const a = audio();
+      if (a) a.play("win", { vibrate: false });
+      speak(`Level ${level} complete.`);
+    }
+
     function pickColorForBalloon() {
-      const forceTarget = Math.random() < 0.45;
-      if (forceTarget) return target;
-      const others = COLORS.filter((c) => c.name !== target.name);
-      return pickRandom(others);
+      if (Math.random() < 0.45) return target;
+      return pickDistractor(COLORS, target);
     }
 
     function spawnBalloon(nowMs) {
-      if (ended || !running) return;
-      if (balloons.length >= MAX_ACTIVE_BALLOONS) return;
+      if (phase !== "wave" || balloons.length >= MAX_ACTIVE_BALLOONS) return;
+      if (areaWidth <= 0 || areaHeight <= 0) return;
 
       const color = pickColorForBalloon();
       const btn = document.createElement("button");
@@ -177,7 +230,7 @@
       const maxX = Math.max(minX + 1, areaWidth - size - margin);
       const x = Math.round(minX + Math.random() * (maxX - minX));
       const y = areaHeight + size + Math.random() * 60;
-      const vy = getRiseSpeed() * (0.85 + Math.random() * 0.4);
+      const vy = getRiseSpeed(level) * (0.85 + Math.random() * 0.4);
       const vx = (Math.random() - 0.5) * 26;
 
       btn.style.width = `${size}px`;
@@ -195,15 +248,24 @@
       lastSpawn = nowMs;
     }
 
+    function scheduleRemoval(b) {
+      setTimeout(() => {
+        if (b.el && b.el.parentNode) {
+          b.el.parentNode.removeChild(b.el);
+        }
+      }, 320);
+      balloons = balloons.filter((x) => x !== b);
+    }
+
     function onBalloonPop(b) {
-      if (ended || b.popped) return;
+      if (phase === "ended" || b.popped) return;
       b.popped = true;
       const a = audio();
 
       const isTarget = b.color.name === target.name;
       if (isTarget) {
         score += 1;
-        popsSinceTargetChange += 1;
+        if (phase === "wave") wavePops += 1;
         b.el.classList.add("is-correct");
         setStatus("Pop! Nice aim.", "ok");
         if (a) a.play("match");
@@ -215,11 +277,6 @@
       }
 
       b.el.classList.add("pop");
-      const newLevel = getLevel();
-      if (newLevel !== level) {
-        level = newLevel;
-        if (a) a.play("levelStart", { vibrate: false });
-      }
       paintMeta();
       scheduleRemoval(b);
 
@@ -228,27 +285,20 @@
         return;
       }
 
-      if (popsSinceTargetChange >= TARGET_CHANGES_EVERY_POPS) {
-        rotateTarget();
+      if (phase === "wave" && wavePops >= waveGoal) {
+        phase = "waveComplete";
+        setStatus(`Level ${level} cleared! Finish the sky…`, "ok");
       }
     }
 
-    function scheduleRemoval(b) {
-      setTimeout(() => {
-        if (b.el && b.el.parentNode) {
-          b.el.parentNode.removeChild(b.el);
-        }
-      }, 320);
-      balloons = balloons.filter((x) => x !== b);
-    }
-
-    function rotateTarget() {
-      popsSinceTargetChange = 0;
-      const next = pickDistractor(COLORS, target);
-      target = next;
-      paintTarget();
-      setStatus(`New color! Pop ${target.name}!`, null);
-      speak(`Now pop the ${target.name} balloons`);
+    function onMissedEscape() {
+      if (phase !== "wave") return;
+      lives -= 1;
+      paintMeta();
+      setStatus(`A ${target.name} balloon got away!`, "warn");
+      const a = audio();
+      if (a) a.play("miss");
+      if (lives <= 0) endGame();
     }
 
     function updateBalloons(dt) {
@@ -273,61 +323,50 @@
           balloons.splice(i, 1);
           if (b.color.name === target.name) {
             onMissedEscape();
-            if (ended) return;
+            if (phase === "ended") return;
           }
           continue;
         }
 
         b.el.style.transform = `translate3d(${b.x}px, ${b.y}px, 0)`;
       }
+
+      if (phase === "waveComplete" && balloons.length === 0) {
+        transitionToNextLevel();
+      }
     }
 
-    function onMissedEscape() {
-      if (ended) return;
-      lives -= 1;
-      paintMeta();
-      setStatus(`A ${target.name} balloon got away!`, "warn");
-      const a = audio();
-      if (a) a.play("miss");
-      if (lives <= 0) endGame();
+    function transitionToNextLevel() {
+      phase = "transition";
+      showLevelCompleteBanner(() => {
+        level += 1;
+        target = pickDistractor(COLORS, target);
+        wavePops = 0;
+        waveGoal = getWaveGoal(level);
+        paintMeta();
+        paintTarget();
+        showLevelIntroBanner(() => {
+          phase = "wave";
+          lastSpawn = 0;
+          const a = audio();
+          if (a) a.play("levelStart", { vibrate: false });
+          setStatus(`Pop the ${target.name} balloons!`, null);
+        });
+      });
     }
 
     function loop(now) {
-      if (!running || ended) return;
+      if (!running || phase === "ended") return;
       const dt = Math.min(50, now - (lastFrame || now));
       lastFrame = now;
 
-      if (!lastSpawn || now - lastSpawn > getSpawnInterval()) {
-        spawnBalloon(now);
+      if (phase === "wave") {
+        if (!lastSpawn || now - lastSpawn > getSpawnInterval(level)) {
+          spawnBalloon(now);
+        }
       }
 
       updateBalloons(dt);
-      rafId = requestAnimationFrame(loop);
-    }
-
-    function start() {
-      ended = false;
-      running = true;
-      score = 0;
-      lives = START_LIVES;
-      level = 1;
-      popsSinceTargetChange = 0;
-      target = pickRandom(COLORS);
-      clearBalloons();
-
-      paintMeta();
-      paintTarget();
-      setStatus(`Pop the ${target.name} balloons!`, null);
-      overlay.classList.add("hidden");
-
-      const a = audio();
-      if (a) a.play("levelStart");
-      speak(`Let's pop some balloons. Find the ${target.name} ones!`);
-
-      measureArea();
-      lastFrame = 0;
-      lastSpawn = 0;
-      cancelAnimationFrame(rafId);
       rafId = requestAnimationFrame(loop);
     }
 
@@ -338,16 +377,53 @@
       balloons = [];
     }
 
+    function start() {
+      clearBalloons();
+      clearBannerTimer();
+      banner.classList.add("hidden");
+      overlay.classList.add("hidden");
+
+      phase = "intro";
+      score = 0;
+      lives = START_LIVES;
+      level = 1;
+      target = pickRandom(COLORS);
+      wavePops = 0;
+      waveGoal = getWaveGoal(level);
+
+      paintMeta();
+      paintTarget();
+      setStatus("", null);
+
+      measureArea();
+      lastFrame = 0;
+      lastSpawn = 0;
+      running = true;
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(loop);
+
+      const a = audio();
+      if (a) a.play("levelStart");
+
+      showLevelIntroBanner(() => {
+        phase = "wave";
+        lastSpawn = 0;
+        setStatus(`Pop the ${target.name} balloons!`, null);
+      });
+    }
+
     function endGame() {
-      ended = true;
+      phase = "ended";
       running = false;
       cancelAnimationFrame(rafId);
+      clearBannerTimer();
+      banner.classList.add("hidden");
       clearBalloons();
 
       overlay.innerHTML = `
         <div class="color-overlay-card">
           <h3>Game over</h3>
-          <p>You popped <strong>${score}</strong> balloons.</p>
+          <p>You reached <strong>Level ${level}</strong> and popped <strong>${score}</strong> balloons.</p>
           <button id="color-overlay-restart" class="primary-button" type="button">Play Again</button>
         </div>
       `;
@@ -363,7 +439,7 @@
 
       const a = audio();
       if (a) a.play("win");
-      speak(`Game over. You popped ${score} balloons.`);
+      speak(`Game over. You reached level ${level} with ${score} balloons popped.`);
     }
 
     restartButton.addEventListener("click", () => {
@@ -381,7 +457,7 @@
       if (document.hidden) {
         running = false;
         cancelAnimationFrame(rafId);
-      } else if (!ended) {
+      } else if (phase !== "ended") {
         running = true;
         lastFrame = 0;
         lastSpawn = 0;
@@ -398,8 +474,9 @@
     return {
       destroy() {
         running = false;
-        ended = true;
+        phase = "ended";
         cancelAnimationFrame(rafId);
+        clearBannerTimer();
         clearBalloons();
         document.removeEventListener("visibilitychange", onVisibilityChange);
         try {
