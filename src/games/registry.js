@@ -2,6 +2,7 @@
   const memoryGame = window.Playlab?.games?.memory?.createMemoryGame;
   const shapeSprintGame = window.Playlab?.games?.shapeSprint?.createShapeSprintGame;
   const colorPopGame = window.Playlab?.games?.colorPop?.createColorPopGame;
+  const tapRabbitGame = window.Playlab?.games?.tapRabbit?.createTapRabbitGame;
 
   const gameRegistry = [
     {
@@ -36,6 +37,17 @@
       status: "New",
       theme: { from: "#ffb54c", to: "#ff6fb5" },
       launch: colorPopGame,
+    },
+    {
+      id: "tap-rabbit",
+      name: "Catch the Rabbit",
+      tagline: "Peek-a-boo bunny time",
+      description: "Silly bunnies pop from the burrows—catch them before they hide! Level up and grow your score.",
+      icon: "🐰",
+      tags: ["Ages 4+", "Speed"],
+      status: "New",
+      theme: { from: "#4ad18a", to: "#7c5cff" },
+      launch: tapRabbitGame,
     },
     {
       id: "word-whiz",
