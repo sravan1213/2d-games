@@ -1,5 +1,6 @@
 (function () {
   const MAX_DISTRACTOR_REDUNDANCY = 3;
+
   const THEMES = [
     {
       id: "shapes",
@@ -102,6 +103,26 @@
       ],
     },
     {
+      id: "vehicles",
+      label: "Vehicles",
+      hintNoun: "vehicle",
+      intro: "Vehicle Sprint",
+      items: [
+        { symbol: "🚗", name: "Car", color: "#5f8bff" },
+        { symbol: "🚕", name: "Taxi", color: "#f2c341" },
+        { symbol: "🚙", name: "SUV", color: "#56a3ff" },
+        { symbol: "🚌", name: "Bus", color: "#ff8a5b" },
+        { symbol: "🚎", name: "Trolleybus", color: "#6f83a8" },
+        { symbol: "🚓", name: "Police Car", color: "#4f6fd6" },
+        { symbol: "🚑", name: "Ambulance", color: "#e84a5f" },
+        { symbol: "🚒", name: "Fire Truck", color: "#ff6f59" },
+        { symbol: "🚚", name: "Delivery Truck", color: "#8a9ec9" },
+        { symbol: "🚜", name: "Tractor", color: "#72c45e" },
+        { symbol: "🚲", name: "Bicycle", color: "#2ec36b" },
+        { symbol: "🏍️", name: "Motorbike", color: "#bb6dff" },
+      ],
+    },
+    {
       id: "vegetables",
       label: "Vegetables",
       hintNoun: "vegetable",
@@ -127,18 +148,18 @@
       hintNoun: "planet",
       intro: "Planet Sprint",
       items: [
-        { symbol: "☿", name: "Mercury", color: "#a7a6a3" },
-        { symbol: "♀", name: "Venus", color: "#d8b08c" },
-        { symbol: "⊕", name: "Earth", color: "#4f86ff" },
-        { symbol: "♂", name: "Mars", color: "#d96d4f" },
-        { symbol: "♃", name: "Jupiter", color: "#c9a47e" },
-        { symbol: "♄", name: "Saturn", color: "#d7c288" },
-        { symbol: "♅", name: "Uranus", color: "#75bfd8" },
-        { symbol: "♆", name: "Neptune", color: "#4f6fd6" },
-        { symbol: "🪐", name: "Ringed Planet", color: "#e1be7a" },
-        { symbol: "🌎", name: "Globe", color: "#3ea9f5" },
+        { symbol: "⚪", name: "Mercury", color: "#b5b5b2" },
+        { symbol: "🟡", name: "Venus", color: "#d8b08c" },
+        { symbol: "🌍", name: "Earth", color: "#3ea9f5" },
+        { symbol: "🔴", name: "Mars", color: "#d96d4f" },
+        { symbol: "🟠", name: "Jupiter", color: "#d3a16a" },
+        { symbol: "🪐", name: "Saturn", color: "#e1be7a" },
+        { symbol: "🔵", name: "Uranus", color: "#75bfd8" },
+        { symbol: "🟣", name: "Neptune", color: "#4f6fd6" },
+        { symbol: "☀️", name: "Sun", color: "#ffd54d" },
         { symbol: "🌕", name: "Moon", color: "#ddd2ad" },
-        { symbol: "🌟", name: "Bright Star", color: "#ffd54d" },
+        { symbol: "☄️", name: "Comet", color: "#8fc7ff" },
+        { symbol: "🌟", name: "Star", color: "#ffcf5c" },
       ],
     },
   ];
@@ -148,6 +169,81 @@
     typeof window !== "undefined" &&
     "speechSynthesis" in window &&
     "SpeechSynthesisUtterance" in window;
+  const FEMALE_VOICE_HINTS = [
+    "samantha",
+    "ava",
+    "allison",
+    "karen",
+    "moira",
+    "fiona",
+    "serena",
+    "victoria",
+    "zira",
+    "hazel",
+    "female",
+    "woman",
+    "siri",
+    "google uk english female",
+    "google us english",
+  ];
+  const MALE_VOICE_HINTS = [
+    "alex",
+    "daniel",
+    "fred",
+    "jorge",
+    "male",
+    "man",
+  ];
+  const AVOID_VOICE_HINTS = ["espeak", "robot"];
+  let cachedVoice = null;
+
+  function scoreVoice(voice) {
+    const name = String(voice.name || "").toLowerCase();
+    const lang = String(voice.lang || "").toLowerCase();
+    let score = 0;
+
+    if (voice.localService) score += 30;
+    if (lang.startsWith("en")) score += 25;
+    if (lang.startsWith("en-us") || lang.startsWith("en-gb")) score += 20;
+    if (FEMALE_VOICE_HINTS.some((hint) => name.includes(hint))) score += 70;
+    if (MALE_VOICE_HINTS.some((hint) => name.includes(hint))) score -= 15;
+    if (AVOID_VOICE_HINTS.some((hint) => name.includes(hint))) score -= 80;
+
+    return score;
+  }
+
+  function getNaturalVoice() {
+    if (!canSpeak) return null;
+    const voices = window.speechSynthesis.getVoices();
+    if (!voices || !voices.length) return null;
+
+    if (
+      cachedVoice &&
+      voices.some((voice) => voice.voiceURI === cachedVoice.voiceURI)
+    ) {
+      return cachedVoice;
+    }
+
+    let bestVoice = voices[0];
+    let bestScore = scoreVoice(bestVoice);
+    for (let i = 1; i < voices.length; i += 1) {
+      const current = voices[i];
+      const currentScore = scoreVoice(current);
+      if (currentScore > bestScore) {
+        bestVoice = current;
+        bestScore = currentScore;
+      }
+    }
+
+    cachedVoice = bestVoice;
+    return bestVoice;
+  }
+
+  if (canSpeak && window.speechSynthesis.addEventListener) {
+    window.speechSynthesis.addEventListener("voiceschanged", () => {
+      cachedVoice = null;
+    });
+  }
 
   function speak(text) {
     if (!canSpeak || !text) return;
@@ -157,9 +253,16 @@
     try {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 0.92;
-      utterance.pitch = 1.15;
-      utterance.volume = 1;
+      const preferredVoice = getNaturalVoice();
+      if (preferredVoice) {
+        utterance.voice = preferredVoice;
+        utterance.lang = preferredVoice.lang || "en-US";
+      } else {
+        utterance.lang = "en-US";
+      }
+      utterance.rate = 0.86;
+      utterance.pitch = 1;
+      utterance.volume = 0.92;
       window.speechSynthesis.speak(utterance);
     } catch (_) {
       // Ignore speech errors on unsupported browsers.
