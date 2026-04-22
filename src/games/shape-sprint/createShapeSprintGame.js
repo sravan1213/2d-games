@@ -165,6 +165,7 @@
   ];
 
   const audio = () => window.Playlab && window.Playlab.audio;
+  const SPEECH_PREF_KEY = "shapeSprintSpeechEnabled";
   const canSpeak =
     typeof window !== "undefined" &&
     "speechSynthesis" in window &&
@@ -269,6 +270,25 @@
     }
   }
 
+  function loadSpeechEnabled() {
+    try {
+      const saved = window.localStorage.getItem(SPEECH_PREF_KEY);
+      if (saved === "0") return false;
+      if (saved === "1") return true;
+    } catch (_) {
+      // Ignore localStorage access errors.
+    }
+    return true;
+  }
+
+  function saveSpeechEnabled(enabled) {
+    try {
+      window.localStorage.setItem(SPEECH_PREF_KEY, enabled ? "1" : "0");
+    } catch (_) {
+      // Ignore localStorage access errors.
+    }
+  }
+
   function shuffle(array) {
     const copy = [...array];
     for (let i = copy.length - 1; i > 0; i -= 1) {
@@ -311,7 +331,10 @@
             <p id="shape-lives-label">Lives: ❤❤❤</p>
             <p id="shape-time-label">Time: 5.0s</p>
           </div>
-          <button id="shape-restart-button" class="secondary-button" type="button">Restart</button>
+          <div class="shape-sprint-actions">
+            <button id="shape-speech-toggle" class="secondary-button" type="button">Speech: On</button>
+            <button id="shape-restart-button" class="secondary-button" type="button">Restart</button>
+          </div>
         </header>
 
         <div class="shape-target-card">
@@ -339,6 +362,7 @@
     const timerFill = container.querySelector("#shape-timer-fill");
     const statusMessage = container.querySelector("#shape-status-message");
     const restartButton = container.querySelector("#shape-restart-button");
+    const speechToggleButton = container.querySelector("#shape-speech-toggle");
 
     let score = 0;
     let lives = 3;
@@ -350,6 +374,24 @@
     let deadline = 0;
     let tickTimer = null;
     let nextRoundTimer = null;
+    let speechEnabled = loadSpeechEnabled();
+
+    function speakInstruction(text) {
+      if (!speechEnabled) return;
+      speak(text);
+    }
+
+    function paintSpeechToggle() {
+      if (!speechToggleButton) return;
+      if (!canSpeak) {
+        speechToggleButton.textContent = "Speech: N/A";
+        speechToggleButton.disabled = true;
+        return;
+      }
+      speechToggleButton.disabled = false;
+      speechToggleButton.textContent = `Speech: ${speechEnabled ? "On" : "Off"}`;
+      speechToggleButton.setAttribute("aria-pressed", String(!speechEnabled));
+    }
 
     function setStatus(text, variant) {
       statusMessage.textContent = text;
@@ -437,7 +479,7 @@
 
       tickTimer = setInterval(paintTimer, 60);
       setStatus(`Round ${round}: Find ${activeTarget.name}!`, null);
-      speak(`Find the ${activeTarget.name}`);
+      speakInstruction(activeTarget.name);
     }
 
     function onTimeout() {
@@ -471,7 +513,7 @@
         button.classList.add("is-correct");
         setStatus("Great hit!", "ok");
         if (a) a.play("match");
-        speak("Great job!");
+        speakInstruction("Great job!");
         nextRoundTimer = setTimeout(renderRound, 280);
         return;
       }
@@ -481,7 +523,7 @@
       button.classList.add("is-wrong");
       setStatus(`Oops! Wrong ${activeTheme.hintNoun}.`, "warn");
       if (a) a.play("miss");
-      speak("Oops, try again.");
+      speakInstruction("Oops, try again.");
 
       if (lives <= 0) {
         endGame();
@@ -505,7 +547,7 @@
       );
       const a = audio();
       if (a) a.play("win");
-      speak(`Game over. Your score is ${score}.`);
+      speakInstruction(`Game over. Your score is ${score}.`);
     }
 
     function startGame() {
@@ -519,8 +561,19 @@
       setStatus("Ready... go!", null);
       const a = audio();
       if (a) a.play("levelStart");
-      speak(`Ready? ${activeTheme.intro}. Find the ${activeTheme.hintNoun}.`);
+      speakInstruction(`Ready? ${activeTheme.intro}. Find the ${activeTheme.hintNoun}.`);
       renderRound();
+    }
+
+    if (speechToggleButton) {
+      speechToggleButton.addEventListener("click", () => {
+        const a = audio();
+        if (a) a.play("click");
+        speechEnabled = !speechEnabled;
+        saveSpeechEnabled(speechEnabled);
+        if (!speechEnabled && canSpeak) window.speechSynthesis.cancel();
+        paintSpeechToggle();
+      });
     }
 
     restartButton.addEventListener("click", () => {
@@ -529,6 +582,7 @@
       startGame();
     });
 
+    paintSpeechToggle();
     startGame();
 
     return {

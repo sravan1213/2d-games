@@ -1174,6 +1174,13 @@ body.is-playing .game-mount {
   flex: 0 0 auto;
 }
 
+.shape-sprint-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .shape-sprint-meta {
   display: flex;
   gap: 8px;
