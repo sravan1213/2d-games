@@ -113,6 +113,9 @@
     const restartButton = container.querySelector("#memory-restart-button");
 
     let level = 1;
+    let sizeRound = 1;
+    let currentConfig = getLevelConfig(level);
+    let roundsPerSize = Math.min(currentConfig.rows, currentConfig.cols);
     let moves = 0;
     let tiles = [];
     let firstChoiceId = null;
@@ -191,21 +194,25 @@
 
     function startLevel(currentLevel) {
       clearTransitionTimer();
-      const config = getLevelConfig(currentLevel);
-      tiles = buildTiles(config.pairs);
+      currentConfig = getLevelConfig(currentLevel);
+      roundsPerSize = Math.min(currentConfig.rows, currentConfig.cols);
+      tiles = buildTiles(currentConfig.pairs);
       moves = 0;
       matchCount = 0;
       resetRoundState();
 
       levelLabel.textContent = `Level ${currentLevel}`;
       movesLabel.textContent = `Moves: 0`;
-      setStatus(`Find ${config.pairs} pairs`, null);
+      setStatus(
+        `Find ${currentConfig.pairs} pairs · Round ${sizeRound}/${roundsPerSize}`,
+        null
+      );
 
-      board.style.setProperty("--board-cols", String(config.cols));
-      board.style.setProperty("--board-rows", String(config.rows));
+      board.style.setProperty("--board-cols", String(currentConfig.cols));
+      board.style.setProperty("--board-rows", String(currentConfig.rows));
       board.style.setProperty(
         "--board-aspect",
-        String(config.cols / config.rows)
+        String(currentConfig.cols / currentConfig.rows)
       );
 
       renderBoard();
@@ -213,11 +220,22 @@
 
     function completeLevel() {
       isBoardLocked = true;
-      setStatus("🎉 Great job! Next level starts soon...", "win");
+      const hasAnotherRoundInSameSize = sizeRound < roundsPerSize;
+      setStatus(
+        hasAnotherRoundInSameSize
+          ? "🎉 Great job! Same grid, next round..."
+          : "🎉 Great job! Next level starts soon...",
+        "win"
+      );
       const a = audio();
       if (a) a.play("win");
       transitionTimer = setTimeout(() => {
-        level += 1;
+        if (sizeRound < roundsPerSize) {
+          sizeRound += 1;
+        } else {
+          level += 1;
+          sizeRound = 1;
+        }
         startLevel(level);
       }, 1400);
     }
@@ -240,7 +258,7 @@
         renderBoard();
         resetRoundState();
 
-        if (matchCount === getLevelConfig(level).pairs) {
+        if (matchCount === currentConfig.pairs) {
           completeLevel();
         }
         return;

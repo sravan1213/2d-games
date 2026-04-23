@@ -370,6 +370,7 @@
     let ended = false;
     let activeTheme = pickRandom(THEMES);
     let activeTarget = null;
+    let lastTargetSymbol = null;
     let roundDurationMs = 5000;
     let deadline = 0;
     let tickTimer = null;
@@ -437,7 +438,16 @@
       const gridSize = getGridSize();
       const cells = gridSize * gridSize;
       const themeItems = activeTheme.items;
-      activeTarget = pickRandom(themeItems);
+      let nextTarget = pickRandom(themeItems);
+      if (themeItems.length > 1 && lastTargetSymbol) {
+        let attempts = 0;
+        while (nextTarget.symbol === lastTargetSymbol && attempts < 10) {
+          nextTarget = pickRandom(themeItems);
+          attempts += 1;
+        }
+      }
+      activeTarget = nextTarget;
+      lastTargetSymbol = activeTarget.symbol;
       const boardItems = buildBoardItems({ themeItems, target: activeTarget, cells });
       const targetPos = Math.floor(Math.random() * cells);
 
@@ -557,6 +567,7 @@
       round = 1;
       ended = false;
       activeTheme = pickRandom(THEMES);
+      lastTargetSymbol = null;
       paintMeta();
       setStatus("Ready... go!", null);
       const a = audio();
