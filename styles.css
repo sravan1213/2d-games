@@ -1443,7 +1443,6 @@ body.is-playing .game-mount {
   position: absolute;
   background: rgba(255, 255, 255, 0.75);
   border-radius: 999px;
-  filter: blur(4px);
   pointer-events: none;
 }
 
@@ -1479,8 +1478,6 @@ body.is-playing .game-mount {
   cursor: pointer;
   will-change: transform;
   touch-action: manipulation;
-  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.18));
-  transition: filter 120ms ease;
 }
 
 .balloon:focus-visible {
@@ -1515,17 +1512,23 @@ body.is-playing .game-mount {
 }
 
 .balloon.is-correct .balloon-body {
-  filter: brightness(1.15);
+  opacity: 0.95;
 }
 
 .balloon.is-wrong .balloon-body {
-  filter: saturate(0.6);
+  opacity: 0.82;
 }
 
 @keyframes balloonPop {
   0% { transform: scale(1); opacity: 1; }
   40% { transform: scale(1.35); opacity: 0.9; }
   100% { transform: scale(0.2); opacity: 0; }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .balloon-body {
+    animation: none;
+  }
 }
 
 .color-banner {

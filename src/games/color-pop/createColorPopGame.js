@@ -80,6 +80,13 @@
     `;
   }
 
+  function createBalloonBody(color) {
+    const body = document.createElement("span");
+    body.className = "balloon-body";
+    body.innerHTML = balloonSvg(color);
+    return body;
+  }
+
   function createColorPopGame({ container }) {
     container.innerHTML = `
       <section class="color-pop-game">
@@ -97,7 +104,7 @@
           <div id="color-target-preview" class="color-target-preview"></div>
         </div>
 
-        <div id="color-play-area" class="color-play-area" aria-live="polite">
+        <div id="color-play-area" class="color-play-area">
           <div class="play-cloud play-cloud-a" aria-hidden="true"></div>
           <div class="play-cloud play-cloud-b" aria-hidden="true"></div>
           <div id="color-banner" class="color-banner hidden" aria-live="polite"></div>
@@ -135,6 +142,12 @@
     let areaWidth = 0;
     let areaHeight = 0;
     let bannerTimer = null;
+    let balloonIdCounter = 0;
+
+    const balloonBodyTemplateByColor = new Map(
+      COLORS.map((color) => [color.name, createBalloonBody(color)]),
+    );
+    const balloonById = new Map();
 
     function setStatus(text, variant) {
       statusMessage.textContent = text || "";
@@ -189,7 +202,7 @@
            <p class="banner-color-name">${target.name}</p>
          </div>`,
         NEW_LEVEL_INTRO_MS,
-        onDone
+        onDone,
       );
       speak(`${target.name}.`);
     }
@@ -201,7 +214,7 @@
            <p>Nice popping!</p>
          </div>`,
         LEVEL_COMPLETE_MS,
-        onDone
+        onDone,
       );
       const a = audio();
       if (a) a.play("win", { vibrate: false });
@@ -222,7 +235,8 @@
       btn.type = "button";
       btn.className = "balloon";
       btn.setAttribute("aria-label", `${color.name} balloon`);
-      btn.innerHTML = `<span class="balloon-body">${balloonSvg(color)}</span>`;
+      const template = balloonBodyTemplateByColor.get(color.name);
+      if (template) btn.appendChild(template.cloneNode(true));
 
       const margin = 12;
       const size = BALLOON_SIZE;
@@ -236,25 +250,34 @@
       btn.style.width = `${size}px`;
       btn.style.height = `${size + BALLOON_STRING}px`;
       btn.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+      const balloonId = `${balloonIdCounter}`;
+      balloonIdCounter += 1;
+      btn.dataset.balloonId = balloonId;
 
-      const state = { el: btn, x, y, vy, vx, color, size, popped: false };
-      btn.addEventListener("pointerdown", (event) => {
-        event.preventDefault();
-        onBalloonPop(state);
-      });
+      const state = {
+        id: balloonId,
+        el: btn,
+        x,
+        y,
+        vy,
+        vx,
+        color,
+        size,
+        popped: false,
+        removeAtMs: 0,
+      };
 
       playArea.appendChild(btn);
       balloons.push(state);
+      balloonById.set(balloonId, state);
       lastSpawn = nowMs;
     }
 
-    function scheduleRemoval(b) {
-      setTimeout(() => {
-        if (b.el && b.el.parentNode) {
-          b.el.parentNode.removeChild(b.el);
-        }
-      }, 320);
-      balloons = balloons.filter((x) => x !== b);
+    function detachBalloonElement(b) {
+      balloonById.delete(b.id);
+      if (b.el && b.el.parentNode) {
+        b.el.parentNode.removeChild(b.el);
+      }
     }
 
     function onBalloonPop(b) {
@@ -278,7 +301,7 @@
 
       b.el.classList.add("pop");
       paintMeta();
-      scheduleRemoval(b);
+      b.removeAtMs = performance.now() + 320;
 
       if (lives <= 0) {
         endGame();
@@ -301,11 +324,17 @@
       if (lives <= 0) endGame();
     }
 
-    function updateBalloons(dt) {
+    function updateBalloons(dt, nowMs) {
       const dtSec = dt / 1000;
       for (let i = balloons.length - 1; i >= 0; i -= 1) {
         const b = balloons[i];
-        if (b.popped) continue;
+        if (b.popped) {
+          if (nowMs >= b.removeAtMs) {
+            detachBalloonElement(b);
+            balloons.splice(i, 1);
+          }
+          continue;
+        }
         b.y -= b.vy * dtSec;
         b.x += b.vx * dtSec;
 
@@ -319,7 +348,7 @@
         }
 
         if (b.y + (b.size + BALLOON_STRING) < -10) {
-          if (b.el && b.el.parentNode) b.el.parentNode.removeChild(b.el);
+          detachBalloonElement(b);
           balloons.splice(i, 1);
           if (b.color.name === target.name) {
             onMissedEscape();
@@ -366,15 +395,26 @@
         }
       }
 
-      updateBalloons(dt);
+      updateBalloons(dt, now);
       rafId = requestAnimationFrame(loop);
     }
 
     function clearBalloons() {
       balloons.forEach((b) => {
-        if (b.el && b.el.parentNode) b.el.parentNode.removeChild(b.el);
+        detachBalloonElement(b);
       });
       balloons = [];
+    }
+
+    function onPlayAreaPointerDown(event) {
+      const el = event.target.closest(".balloon");
+      if (!el || !playArea.contains(el)) return;
+      const balloonId = el.dataset.balloonId;
+      if (!balloonId) return;
+      const state = balloonById.get(balloonId);
+      if (!state) return;
+      event.preventDefault();
+      onBalloonPop(state);
     }
 
     function start() {
@@ -439,7 +479,9 @@
 
       const a = audio();
       if (a) a.play("win");
-      speak(`Game over. You reached level ${level} with ${score} balloons popped.`);
+      speak(
+        `Game over. You reached level ${level} with ${score} balloons popped.`,
+      );
     }
 
     restartButton.addEventListener("click", () => {
@@ -447,6 +489,7 @@
       if (a) a.play("click");
       start();
     });
+    playArea.addEventListener("pointerdown", onPlayAreaPointerDown);
 
     const resizeObserver = new ResizeObserver(() => {
       measureArea();
@@ -479,6 +522,7 @@
         clearBannerTimer();
         clearBalloons();
         document.removeEventListener("visibilitychange", onVisibilityChange);
+        playArea.removeEventListener("pointerdown", onPlayAreaPointerDown);
         try {
           resizeObserver.disconnect();
         } catch (_) {
