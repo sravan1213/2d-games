@@ -3,6 +3,7 @@
   const shapeSprintGame = window.Playlab?.games?.shapeSprint?.createShapeSprintGame;
   const colorPopGame = window.Playlab?.games?.colorPop?.createColorPopGame;
   const tapRabbitGame = window.Playlab?.games?.tapRabbit?.createTapRabbitGame;
+  const findOddGame = window.Playlab?.games?.findOdd?.createFindOddGame;
 
   const gameRegistry = [
     {
@@ -48,6 +49,17 @@
       status: "New",
       theme: { from: "#4ad18a", to: "#7c5cff" },
       launch: tapRabbitGame,
+    },
+    {
+      id: "find-odd",
+      name: "Find the Odd One",
+      tagline: "Spot the unpaired one",
+      description: "Many pairs appear, but one item has no pair. Find it fast!",
+      icon: "🧩",
+      tags: ["Ages 5+", "Focus"],
+      status: "New",
+      theme: { from: "#3ecfc0", to: "#ffb54c" },
+      launch: findOddGame,
     },
     {
       id: "word-whiz",

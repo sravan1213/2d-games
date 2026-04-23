@@ -1054,14 +1054,16 @@ body.is-playing .game-mount {
   body.is-playing .memory-game,
   body.is-playing .shape-sprint-game,
   body.is-playing .color-pop-game,
-  body.is-playing .rabbit-game {
+  body.is-playing .rabbit-game,
+  body.is-playing .odd-one-game {
     gap: 10px;
   }
 
   body.is-playing .memory-header,
   body.is-playing .shape-sprint-header,
   body.is-playing .color-pop-header,
-  body.is-playing .rabbit-header {
+  body.is-playing .rabbit-header,
+  body.is-playing .odd-one-header {
     gap: 8px;
     padding: 0;
     justify-content: center;
@@ -1070,7 +1072,8 @@ body.is-playing .game-mount {
   body.is-playing .memory-meta,
   body.is-playing .shape-sprint-meta,
   body.is-playing .color-pop-meta,
-  body.is-playing .rabbit-meta {
+  body.is-playing .rabbit-meta,
+  body.is-playing .odd-one-meta {
     gap: 6px;
     justify-content: center;
   }
@@ -1078,7 +1081,8 @@ body.is-playing .game-mount {
   body.is-playing .memory-meta p,
   body.is-playing .shape-sprint-meta p,
   body.is-playing .color-pop-meta p,
-  body.is-playing .rabbit-meta p {
+  body.is-playing .rabbit-meta p,
+  body.is-playing .odd-one-meta p {
     font-size: 0.76rem;
     padding: 4px 8px;
   }
@@ -1086,14 +1090,16 @@ body.is-playing .game-mount {
   body.is-playing .memory-header .secondary-button,
   body.is-playing .shape-sprint-header .secondary-button,
   body.is-playing .color-pop-header .secondary-button,
-  body.is-playing .rabbit-header .secondary-button {
+  body.is-playing .rabbit-header .secondary-button,
+  body.is-playing .odd-one-header .secondary-button {
     font-size: 0.78rem;
     padding: 7px 10px;
   }
 
   body.is-playing .shape-target-card,
   body.is-playing .color-target-card,
-  body.is-playing .rabbit-target-card {
+  body.is-playing .rabbit-target-card,
+  body.is-playing .odd-target-card {
     padding: 8px 10px;
     border-radius: 14px;
   }
@@ -1105,7 +1111,8 @@ body.is-playing .game-mount {
 
   body.is-playing .shape-target-preview,
   body.is-playing .color-target-preview,
-  body.is-playing .rabbit-target-preview {
+  body.is-playing .rabbit-target-preview,
+  body.is-playing .odd-target-preview {
     padding: 6px 10px;
     gap: 8px;
   }
@@ -1118,7 +1125,8 @@ body.is-playing .game-mount {
 
   body.is-playing .shape-target-preview .name,
   body.is-playing .color-target-preview .name,
-  body.is-playing .rabbit-target-preview .name {
+  body.is-playing .rabbit-target-preview .name,
+  body.is-playing .odd-target-preview .name {
     font-size: 0.92rem;
   }
 
@@ -1132,7 +1140,8 @@ body.is-playing .game-mount {
   body.is-playing .memory-status,
   body.is-playing .shape-status,
   body.is-playing .color-status,
-  body.is-playing .rabbit-status {
+  body.is-playing .rabbit-status,
+  body.is-playing .odd-status {
     display: none;
   }
 
@@ -1142,7 +1151,8 @@ body.is-playing .game-mount {
 
   body.is-playing .shape-target-card,
   body.is-playing .color-target-card,
-  body.is-playing .rabbit-target-card {
+  body.is-playing .rabbit-target-card,
+  body.is-playing .odd-target-card {
     padding: 6px 10px;
   }
 
@@ -1340,6 +1350,172 @@ body.is-playing .game-mount {
 }
 
 .shape-status.end {
+  color: #564a8a;
+}
+
+/* Find The Odd One */
+.odd-one-game {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: 100%;
+  min-height: 0;
+}
+
+.odd-one-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 0 4px;
+  flex: 0 0 auto;
+}
+
+.odd-one-meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.odd-one-meta p {
+  margin: 0;
+  background: #ffffff;
+  color: #3f3473;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 0.9rem;
+  border: 1px solid #e7dcff;
+  white-space: nowrap;
+}
+
+.odd-target-card {
+  border: 1px solid #e9e0ff;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #ffffff 0%, #fbf9ff 100%);
+  padding: 8px 12px;
+  text-align: center;
+  flex: 0 0 auto;
+}
+
+.odd-target-preview {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #e7dcff;
+  background: #fff;
+  border-radius: 999px;
+  padding: 8px 14px;
+}
+
+.odd-target-preview .symbol {
+  width: 2.2rem;
+  height: 2.2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.odd-target-preview .name {
+  font-weight: 800;
+  font-size: 1rem;
+  color: #3f3473;
+}
+
+.odd-board-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  container-type: size;
+  position: relative;
+  padding: 0;
+  overflow: hidden;
+}
+
+.odd-board {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 220px;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.odd-tile {
+  position: absolute;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 120ms ease, filter 120ms ease, opacity 120ms ease;
+  touch-action: manipulation;
+}
+
+@media (hover: hover) {
+  .odd-tile:hover {
+    transform: scale(1.06);
+  }
+}
+
+.odd-tile:active {
+  transform: scale(0.95);
+}
+
+.odd-glyph {
+  font-size: 1em;
+  line-height: 1;
+}
+
+.odd-tile.is-correct {
+  transform: scale(1.12);
+  filter: drop-shadow(0 0 0.45rem rgba(71, 210, 126, 0.55));
+}
+
+.odd-tile.is-wrong {
+  opacity: 0.75;
+  filter: drop-shadow(0 0 0.35rem rgba(243, 97, 145, 0.45));
+}
+
+.odd-timer-track {
+  height: 8px;
+  border-radius: 999px;
+  background: #eee7ff;
+  overflow: hidden;
+  flex: 0 0 auto;
+}
+
+.odd-timer-fill {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, #3ecfc0 0%, #7c5cff 55%, #ffb54c 100%);
+  transition: width 60ms linear;
+}
+
+.odd-status {
+  margin: 0;
+  min-height: 20px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--brand);
+  flex: 0 0 auto;
+}
+
+.odd-status.ok {
+  color: #179a56;
+}
+
+.odd-status.warn {
+  color: #c44a72;
+}
+
+.odd-status.end {
   color: #564a8a;
 }
 
