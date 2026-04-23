@@ -191,7 +191,7 @@
         NEW_LEVEL_INTRO_MS,
         onDone
       );
-      speak(`Level ${level}. Find the ${target.name} balloons.`);
+      speak(`${target.name}.`);
     }
 
     function showLevelCompleteBanner(onDone) {

@@ -561,7 +561,7 @@
       setStatus("Ready... go!", null);
       const a = audio();
       if (a) a.play("levelStart");
-      speakInstruction(`Ready? ${activeTheme.intro}. Find the ${activeTheme.hintNoun}.`);
+      speakInstruction(`${activeTheme.hintNoun}.`);
       renderRound();
     }
 
