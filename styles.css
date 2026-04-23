@@ -1938,6 +1938,28 @@ body.is-playing .game-mount {
   transition: transform 200ms cubic-bezier(0.2, 1.35, 0.4, 1), opacity 140ms ease;
 }
 
+.rabbit-glyph::before,
+.rabbit-glyph::after {
+  content: "🐦";
+  position: absolute;
+  left: 50%;
+  top: 0.08em;
+  width: 0.5em;
+  height: 0.5em;
+  margin-left: -0.25em;
+  display: grid;
+  place-items: center;
+  font-size: 0.34em;
+  line-height: 1;
+  opacity: 0;
+  pointer-events: none;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+}
+
+.rabbit-glyph::after {
+  content: "🐤";
+}
+
 .rabbit-burrow.has-rabbit .rabbit-glyph {
   opacity: 1;
   transform: translateY(-18%) scale(1);
@@ -1945,7 +1967,17 @@ body.is-playing .game-mount {
 }
 
 .rabbit-burrow.is-hit .rabbit-glyph {
-  animation: rabbitHit 400ms ease-out forwards;
+  animation: rabbitHitConcussion 700ms cubic-bezier(0.2, 0.95, 0.3, 1) forwards;
+}
+
+.rabbit-burrow.is-hit .rabbit-glyph::before {
+  opacity: 1;
+  animation: rabbitBirdOrbitA 700ms linear forwards;
+}
+
+.rabbit-burrow.is-hit .rabbit-glyph::after {
+  opacity: 1;
+  animation: rabbitBirdOrbitB 700ms linear forwards;
 }
 
 @keyframes rabbitBounce {
@@ -1953,10 +1985,27 @@ body.is-playing .game-mount {
   50% { transform: translateY(-28%) scale(1.05); }
 }
 
-@keyframes rabbitHit {
-  0% { transform: translateY(-18%) scale(1); }
-  35% { transform: translateY(-45%) scale(1.2) rotate(-3deg); opacity: 1; }
-  100% { transform: translateY(-75%) scale(1.4) rotate(4deg); opacity: 0; }
+@keyframes rabbitHitConcussion {
+  0% { transform: translateY(-18%) scale(1) rotate(0deg); opacity: 1; }
+  16% { transform: translateY(-24%) scale(1.05) rotate(-18deg); opacity: 1; }
+  30% { transform: translateY(-26%) scale(1.08) rotate(15deg); opacity: 1; }
+  44% { transform: translateY(-32%) scale(1.12) rotate(-10deg); opacity: 1; }
+  62% { transform: translateY(-46%) scale(1.18) rotate(8deg); opacity: 0.95; }
+  100% { transform: translateY(-74%) scale(1.32) rotate(2deg); opacity: 0; }
+}
+
+@keyframes rabbitBirdOrbitA {
+  0% { transform: translate(-50%, -50%) rotate(0deg) translateX(0.72em) scale(0.85); opacity: 0; }
+  12% { opacity: 1; }
+  78% { opacity: 1; }
+  100% { transform: translate(-50%, -50%) rotate(420deg) translateX(0.72em) scale(1.02); opacity: 0; }
+}
+
+@keyframes rabbitBirdOrbitB {
+  0% { transform: translate(-50%, -50%) rotate(180deg) translateX(0.9em) scale(0.84); opacity: 0; }
+  12% { opacity: 1; }
+  78% { opacity: 1; }
+  100% { transform: translate(-50%, -50%) rotate(620deg) translateX(0.9em) scale(1); opacity: 0; }
 }
 
 @media (hover: hover) {

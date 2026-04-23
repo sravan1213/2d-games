@@ -83,6 +83,10 @@
       chord([523.25, 659.25, 783.99], { type: "triangle", duration: 0.26, gain: 0.22, spread: 0.07 });
       tone({ freq: 1318.5, type: "sine", duration: 0.18, gain: 0.16, delay: 0.18, release: 0.1 });
     },
+    hit() {
+      tone({ freq: 210, type: "square", duration: 0.08, gain: 0.2, release: 0.05 });
+      tone({ freq: 120, type: "sawtooth", duration: 0.12, gain: 0.14, delay: 0.02, release: 0.08 });
+    },
     miss() {
       tone({ freq: 260, type: "sawtooth", duration: 0.22, gain: 0.16, slideTo: 150, release: 0.12 });
     },
@@ -109,6 +113,7 @@
 
   const VIBE = {
     match: [15],
+    hit: [12, 18, 12],
     miss: [90, 50, 90],
     win: [20, 40, 20, 40, 50],
     click: [8],

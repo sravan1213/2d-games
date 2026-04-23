@@ -219,7 +219,7 @@
       score += 1;
       paintMeta();
       setStatus("Nice catch!", "ok");
-      if (a) a.play("match");
+      if (a) a.play("hit");
 
       schedulePop(getPopupInterval(level));
     }
