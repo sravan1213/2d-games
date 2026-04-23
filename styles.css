@@ -1824,27 +1824,31 @@ body.is-playing .game-mount {
 }
 
 .rabbit-burrows {
-  --rabbit-rows: 2;
-  --rabbit-cols: 3;
+  --rabbit-rows: 5;
+  --rabbit-cols: 5;
   position: relative;
   z-index: 2;
   flex: 1 1 auto;
   min-height: 0;
-  width: 100%;
+  width: min(100%, 100cqh);
+  max-height: 100%;
+  aspect-ratio: 1 / 1;
   display: grid;
   grid-template-columns: repeat(var(--rabbit-cols), 1fr);
   grid-template-rows: repeat(var(--rabbit-rows), 1fr);
-  gap: clamp(6px, 1.4cqmin, 16px);
+  gap: clamp(3px, 0.85cqmin, 8px);
   align-items: stretch;
   justify-items: stretch;
-  padding: clamp(4px, 1.2cqmin, 10px) clamp(4px, 1cqmin, 8px) clamp(6px, 1.2cqmin, 10px);
+  align-self: center;
+  justify-self: center;
+  padding: clamp(2px, 0.6cqmin, 6px);
 }
 
 .rabbit-burrow {
   position: relative;
   border: 0;
   background: transparent;
-  padding: 0 2px 4px;
+  padding: 0;
   min-width: 0;
   min-height: 0;
   width: 100%;
@@ -1864,10 +1868,10 @@ body.is-playing .game-mount {
 .rabbit-burrow-inner {
   position: relative;
   container-type: size;
-  width: min(100cqi, calc(1.16 * 100cqb));
+  width: min(80cqi, calc(0.92 * 100cqb));
   max-width: 100cqi;
   max-height: 100cqb;
-  aspect-ratio: 1 / 1.14;
+  aspect-ratio: 1 / 1.08;
   flex: 0 0 auto;
   align-self: flex-end;
   margin-inline: auto;
@@ -1924,7 +1928,7 @@ body.is-playing .game-mount {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 52cqi;
+  font-size: 40cqi;
   line-height: 1;
   z-index: 3;
   transform: translateY(30%) scale(0.2);

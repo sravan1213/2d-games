@@ -1,5 +1,7 @@
 (function () {
   const START_LIVES = 3;
+  const GRID_SIZE = 5;
+  const LEVEL_UP_INTERVAL_MS = 18000;
 
   const audio = () => window.Playlab && window.Playlab.audio;
 
@@ -7,21 +9,19 @@
     return "❤".repeat(Math.max(0, lives)) || "💔";
   }
 
-  function getBurrowCount(level) {
-    if (level >= 10) return 16;
-    if (level >= 7) return 12;
-    if (level >= 4) return 9;
-    return 6;
-  }
-
-  function getGridConfig(count) {
-    if (count === 6) return { rows: 2, cols: 3, aspect: 1.5 };
-    if (count === 9) return { rows: 3, cols: 3, aspect: 1 };
-    if (count === 12) return { rows: 3, cols: 4, aspect: 1.33 };
-    if (count === 16) return { rows: 4, cols: 4, aspect: 1 };
-    if (count === 3) return { rows: 1, cols: 3, aspect: 3 };
-    if (count === 4) return { rows: 2, cols: 2, aspect: 1 };
-    return { rows: 3, cols: 3, aspect: 1 };
+  function pickBurrowCells(gridSize) {
+    const checkerCells = [];
+    for (let row = 0; row < gridSize; row += 1) {
+      for (let col = 0; col < gridSize; col += 1) {
+        if ((row + col) % 2 === 0) {
+          // Keep burrows on alternating "x" cells only:
+          // x 0 x 0 x
+          // 0 x 0 x 0
+          checkerCells.push({ row, col });
+        }
+      }
+    }
+    return checkerCells;
   }
 
   function getPopupInterval(level) {
@@ -30,10 +30,6 @@
 
   function getVisibleDuration(level) {
     return Math.max(1100, 3000 - level * 60);
-  }
-
-  function getLevelGoal(level) {
-    return Math.min(20, 8 + level * 3);
   }
 
   function createTapRabbitGame({ container }) {
@@ -82,12 +78,11 @@
     let score = 0;
     let lives = START_LIVES;
     let level = 1;
-    let levelHits = 0;
-    let levelGoal = getLevelGoal(level);
     let activeIndex = -1;
     let ended = false;
     let popTimer = null;
     let hideTimer = null;
+    let levelUpTimer = null;
     let burrowButtons = [];
 
     function paintMeta() {
@@ -110,6 +105,10 @@
       if (hideTimer) {
         clearTimeout(hideTimer);
         hideTimer = null;
+      }
+      if (levelUpTimer) {
+        clearTimeout(levelUpTimer);
+        levelUpTimer = null;
       }
     }
 
@@ -169,15 +168,21 @@
     }
 
     function levelUp() {
+      if (ended) return;
       level += 1;
-      levelHits = 0;
-      levelGoal = getLevelGoal(level);
       paintMeta();
-      renderField();
-      setStatus(`Level up! Faster rabbits now. Catch ${levelGoal} rabbits.`, "ok");
+      setStatus("Level up! Faster rabbits now.", "ok");
       const a = audio();
       if (a) a.play("levelStart");
-      schedulePop(420);
+    }
+
+    function scheduleLevelUp() {
+      if (ended) return;
+      if (levelUpTimer) clearTimeout(levelUpTimer);
+      levelUpTimer = setTimeout(() => {
+        levelUp();
+        scheduleLevelUp();
+      }, LEVEL_UP_INTERVAL_MS);
     }
 
     function endGame() {
@@ -212,32 +217,29 @@
       clearActiveRabbit();
 
       score += 1;
-      levelHits += 1;
       paintMeta();
-      setStatus(`Nice catch! ${levelGoal - levelHits} to next level.`, "ok");
+      setStatus("Nice catch!", "ok");
       if (a) a.play("match");
-
-      if (levelHits >= levelGoal) {
-        levelUp();
-        return;
-      }
 
       schedulePop(getPopupInterval(level));
     }
 
     function renderField() {
-      const burrowCount = getBurrowCount(level);
-      const { rows, cols } = getGridConfig(burrowCount);
-      burrowsEl.style.setProperty("--rabbit-rows", String(rows));
-      burrowsEl.style.setProperty("--rabbit-cols", String(cols));
+      const burrowCells = pickBurrowCells(GRID_SIZE);
+
+      burrowsEl.style.setProperty("--rabbit-rows", String(GRID_SIZE));
+      burrowsEl.style.setProperty("--rabbit-cols", String(GRID_SIZE));
       burrowsEl.innerHTML = "";
       burrowButtons = [];
 
-      for (let i = 0; i < burrowCount; i += 1) {
+      for (let i = 0; i < burrowCells.length; i += 1) {
+        const cell = burrowCells[i];
         const button = document.createElement("button");
         button.type = "button";
         button.className = "rabbit-burrow";
         button.setAttribute("aria-label", "Burrow");
+        button.style.gridRow = String(cell.row + 1);
+        button.style.gridColumn = String(cell.col + 1);
         button.innerHTML = `
           <span class="rabbit-burrow-inner" aria-hidden="true">
             <span class="rabbit-mound"></span>
@@ -257,16 +259,15 @@
       score = 0;
       lives = START_LIVES;
       level = 1;
-      levelHits = 0;
-      levelGoal = getLevelGoal(level);
       activeIndex = -1;
       ended = false;
       paintMeta();
       renderField();
-      setStatus(`Catch ${levelGoal} rabbits to level up.`, null);
+      setStatus("Catch as many rabbits as you can. Levels increase over time.", null);
       const a = audio();
       if (a) a.play("levelStart");
       schedulePop(520);
+      scheduleLevelUp();
     }
 
     restartButton.addEventListener("click", () => {
