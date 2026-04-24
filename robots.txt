@@ -2,3 +2,4 @@ User-agent: *
 Allow: /
 
 Sitemap: https://games.muske.in/sitemap.xml
+Sitemap: https://games.muske.in/sitemap-main.xml
