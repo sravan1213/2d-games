@@ -350,8 +350,18 @@
     const frag = document.createDocumentFragment();
 
     gameRegistry.forEach((game) => {
-      const card = document.createElement("article");
+      const card = game.comingSoon
+        ? document.createElement("article")
+        : document.createElement("a");
       card.className = `game-card${game.comingSoon ? " is-coming" : ""}`;
+      if (!game.comingSoon) {
+        card.href = `./games/${game.id}/`;
+        card.setAttribute("aria-label", `Play ${game.name}`);
+        card.addEventListener("click", (event) => {
+          event.preventDefault();
+          openGame(game.id);
+        });
+      }
 
       const themeFrom = (game.theme && game.theme.from) || "#7c5cff";
       const themeTo = (game.theme && game.theme.to) || "#ff6fb5";
@@ -396,20 +406,7 @@
         meta.appendChild(bestChip);
       }
 
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = game.comingSoon
-        ? "secondary-button"
-        : "primary-button";
-      button.dataset.gameId = game.id;
-      button.textContent = game.comingSoon ? "Coming Soon" : "Play Now";
-      if (game.comingSoon) {
-        button.disabled = true;
-      } else {
-        button.addEventListener("click", () => openGame(game.id));
-      }
-
-      card.append(art, tag, title, desc, meta, button);
+      card.append(art, tag, title, desc, meta);
       frag.appendChild(card);
     });
 
