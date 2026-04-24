@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>/</loc>
+  </url>
+  <url>
+    <loc>/stats.html</loc>
+  </url>
+  <url>
+    <loc>/games/memory-match/</loc>
+  </url>
+  <url>
+    <loc>/games/shape-sprint/</loc>
+  </url>
+  <url>
+    <loc>/games/color-pop/</loc>
+  </url>
+  <url>
+    <loc>/games/tap-rabbit/</loc>
+  </url>
+  <url>
+    <loc>/games/find-odd/</loc>
+  </url>
+  <url>
+    <loc>/games/shadow-match/</loc>
+  </url>
+  <url>
+    <loc>/games/count-stars/</loc>
+  </url>
+</urlset>

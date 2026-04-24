@@ -12,20 +12,37 @@
 
   const audio = window.Playlab && window.Playlab.audio;
 
-  function showLanding() {
+  function parseGameIdFromLocation() {
+    const pathMatch = window.location.pathname.match(/^\/games\/([^/]+)\/?$/);
+    if (pathMatch && pathMatch[1]) return pathMatch[1];
+
+    const hash = window.location.hash || "";
+    const hashMatch = hash.match(/^#\/games\/([^/?#]+)/);
+    if (hashMatch && hashMatch[1]) return hashMatch[1];
+
+    const queryId = new URLSearchParams(window.location.search).get("game");
+    return queryId || null;
+  }
+
+  function showLanding(options = {}) {
+    const { skipHistory = false, silent = false } = options;
     if (activeGameInstance) {
       activeGameInstance.destroy();
       activeGameInstance = null;
     }
-    if (audio) audio.play("click");
+    if (!silent && audio) audio.play("click");
     gameShell.classList.add("hidden");
     landingScreen.classList.remove("hidden");
     document.body.classList.remove("is-playing");
+    if (!skipHistory && window.location.pathname !== "/") {
+      window.history.pushState({ screen: "home" }, "", "/");
+    }
     renderGameCards();
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }
 
-  function openGame(gameId) {
+  function openGame(gameId, options = {}) {
+    const { skipHistory = false, silent = false } = options;
     const game = gameRegistry.find(
       (entry) =>
         entry.id === gameId &&
@@ -34,7 +51,7 @@
     );
     if (!game) return;
 
-    if (audio) audio.play("click");
+    if (!silent && audio) audio.play("click");
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
     document.documentElement.scrollTop = 0;
     document.body.scrollTop = 0;
@@ -42,6 +59,13 @@
     gameShell.classList.remove("hidden");
     gameTitle.textContent = game.name;
     document.body.classList.add("is-playing");
+    if (!skipHistory) {
+      window.history.pushState(
+        { screen: "game", gameId },
+        "",
+        `/games/${gameId}/`,
+      );
+    }
 
     if (activeGameInstance) activeGameInstance.destroy();
     activeGameInstance = game.launch({ container: gameMount });
@@ -392,8 +416,20 @@
     gamesGrid.appendChild(frag);
   }
 
-  if (backButton) backButton.addEventListener("click", showLanding);
+  if (backButton) backButton.addEventListener("click", () => showLanding());
   renderGameCards();
+  const initialGameId = parseGameIdFromLocation();
+  if (initialGameId) {
+    openGame(initialGameId, { skipHistory: true, silent: true });
+  }
+  window.addEventListener("popstate", () => {
+    const popGameId = parseGameIdFromLocation();
+    if (popGameId) {
+      openGame(popGameId, { skipHistory: true, silent: true });
+    } else {
+      showLanding({ skipHistory: true, silent: true });
+    }
+  });
 
   setupSoundToggle();
   setupInstallExperience();

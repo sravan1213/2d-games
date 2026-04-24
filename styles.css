@@ -501,6 +501,26 @@ button[disabled] {
   color: var(--muted);
 }
 
+.seo-game-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 14px;
+}
+
+.seo-game-links a {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+  color: var(--brand);
+  background: #fff;
+  border: 1px solid var(--border-soft);
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-weight: 700;
+  font-size: 0.82rem;
+}
+
 /* Game cards */
 .games-grid {
   display: grid;
