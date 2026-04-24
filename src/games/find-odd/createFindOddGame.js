@@ -305,6 +305,7 @@
             <p id="odd-score-label">Score: 0</p>
             <p id="odd-lives-label">Lives: ${hearts(START_LIVES)}</p>
             <p id="odd-time-label">Time: --</p>
+            <p id="odd-best-label" class="meta-best hidden">Best: --</p>
           </div>
           <button id="odd-restart-button" class="secondary-button" type="button">Restart</button>
         </header>
@@ -328,19 +329,25 @@
     const scoreLabel = container.querySelector("#odd-score-label");
     const livesLabel = container.querySelector("#odd-lives-label");
     const timeLabel = container.querySelector("#odd-time-label");
+    const bestLabel = container.querySelector("#odd-best-label");
     const board = container.querySelector("#odd-board");
     const timerFill = container.querySelector("#odd-timer-fill");
     const statusMessage = container.querySelector("#odd-status-message");
     const restartButton = container.querySelector("#odd-restart-button");
 
+    const storage = () => window.Playlab && window.Playlab.storage;
+    const BEST_KEY = "find-odd";
+
     let level = 1;
     let score = 0;
     let lives = START_LIVES;
     let ended = false;
+    let paused = false;
     let deadline = 0;
     let roundDurationMs = 0;
-    let tickTimer = null;
+    let rafId = 0;
     let nextRoundTimer = null;
+    let pausedRemainingMs = 0;
     let winsThisLevel = 0;
     let resizeObserver = null;
     let activeCategoryId = "";
@@ -352,13 +359,25 @@
     }
 
     function clearTimers() {
-      if (tickTimer) {
-        clearInterval(tickTimer);
-        tickTimer = null;
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+        rafId = 0;
       }
       if (nextRoundTimer) {
         clearTimeout(nextRoundTimer);
         nextRoundTimer = null;
+      }
+    }
+
+    function paintBestLabel() {
+      const s = storage();
+      if (!s || !bestLabel) return;
+      const best = s.getBest(BEST_KEY);
+      if (best == null) {
+        bestLabel.classList.add("hidden");
+      } else {
+        bestLabel.textContent = `Best: Lv ${best}`;
+        bestLabel.classList.remove("hidden");
       }
     }
 
@@ -384,7 +403,13 @@
       const ratio = Math.max(0, Math.min(1, remaining / roundDurationMs));
       timerFill.style.width = `${ratio * 100}%`;
       timeLabel.textContent = `Time: ${(remaining / 1000).toFixed(1)}s`;
-      if (remaining <= 0) onTimeout();
+      if (remaining <= 0) {
+        onTimeout();
+        return;
+      }
+      if (!ended && !paused) {
+        rafId = requestAnimationFrame(paintTimer);
+      }
     }
 
     function renderRound() {
@@ -415,7 +440,6 @@
       if (roundDurationMs > 0) {
         deadline = performance.now() + roundDurationMs;
         paintTimer();
-        tickTimer = setInterval(paintTimer, 60);
         setStatus(`Level ${level}: ${category.label} - find the odd one fast!`, null);
       } else {
         deadline = 0;
@@ -495,6 +519,8 @@
       }
 
       tile.classList.add("is-wrong");
+      const correctTile = board.querySelector('.odd-tile[data-odd="1"]');
+      if (correctTile) correctTile.classList.add("is-hint");
       lives -= 1;
       paintMeta();
       setStatus("Oops! That's part of a pair.", "warn");
@@ -504,7 +530,7 @@
         endGame();
         return;
       }
-      scheduleNextRound(360);
+      scheduleNextRound(520);
     }
 
     function endGame() {
@@ -514,7 +540,16 @@
       board.querySelectorAll(".odd-tile").forEach((el) => {
         el.disabled = true;
       });
-      setStatus(`Game over! You reached level ${level} with score ${score}.`, "end");
+
+      const s = storage();
+      let bestSuffix = "";
+      if (s) {
+        const newBest = s.setBestHigher(BEST_KEY, level);
+        if (newBest === level && level > 1) bestSuffix = " New best!";
+        paintBestLabel();
+      }
+
+      setStatus(`Game over! You reached level ${level} with score ${score}.${bestSuffix}`, "end");
       const a = audio();
       if (a) a.play("win");
     }
@@ -525,14 +560,37 @@
       score = 0;
       lives = START_LIVES;
       ended = false;
+      paused = false;
       winsThisLevel = 0;
       activeCategoryId = "";
       paintMeta();
+      paintBestLabel();
       setStatus("Find the odd one to level up!", null);
       const a = audio();
       if (a) a.play("levelStart");
       renderRound();
     }
+
+    function onVisibilityChange() {
+      if (ended) return;
+      if (document.hidden) {
+        if (rafId) {
+          cancelAnimationFrame(rafId);
+          rafId = 0;
+        }
+        paused = true;
+        if (roundDurationMs > 0) {
+          pausedRemainingMs = Math.max(0, deadline - performance.now());
+        }
+      } else if (paused) {
+        paused = false;
+        if (roundDurationMs > 0 && pausedRemainingMs > 0) {
+          deadline = performance.now() + pausedRemainingMs;
+        }
+        paintTimer();
+      }
+    }
+    document.addEventListener("visibilitychange", onVisibilityChange);
 
     restartButton.addEventListener("click", () => {
       const a = audio();
@@ -551,6 +609,7 @@
       destroy() {
         ended = true;
         clearTimers();
+        document.removeEventListener("visibilitychange", onVisibilityChange);
         if (resizeObserver) {
           try {
             resizeObserver.disconnect();

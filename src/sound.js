@@ -193,4 +193,46 @@
     isMuted,
     onChange,
   };
+
+  const BEST_PREFIX = "playlab-best:";
+  const storage = {
+    getBest(gameId) {
+      try {
+        const raw = localStorage.getItem(BEST_PREFIX + gameId);
+        if (raw == null) return null;
+        const n = Number(raw);
+        return Number.isFinite(n) ? n : null;
+      } catch (_) {
+        return null;
+      }
+    },
+    setBestHigher(gameId, value) {
+      if (!Number.isFinite(value)) return null;
+      const current = storage.getBest(gameId);
+      if (current == null || value > current) {
+        try {
+          localStorage.setItem(BEST_PREFIX + gameId, String(value));
+        } catch (_) {
+          // ignore
+        }
+        return value;
+      }
+      return current;
+    },
+    setBestLower(gameId, value) {
+      if (!Number.isFinite(value)) return null;
+      const current = storage.getBest(gameId);
+      if (current == null || value < current) {
+        try {
+          localStorage.setItem(BEST_PREFIX + gameId, String(value));
+        } catch (_) {
+          // ignore
+        }
+        return value;
+      }
+      return current;
+    },
+  };
+
+  window.Playlab.storage = storage;
 })();

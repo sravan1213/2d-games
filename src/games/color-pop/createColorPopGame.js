@@ -63,27 +63,54 @@
     return Math.max(380, 1400 - level * 85);
   }
 
-  function balloonSvg(color) {
-    return `
-      <svg viewBox="0 0 64 84" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <defs>
-          <radialGradient id="g-${color.name}" cx="0.35" cy="0.3" r="0.75">
-            <stop offset="0%" stop-color="${color.highlight}"/>
-            <stop offset="100%" stop-color="${color.hex}"/>
-          </radialGradient>
-        </defs>
-        <ellipse cx="32" cy="32" rx="24" ry="28" fill="url(#g-${color.name})"/>
+  // Use a shared <defs> block injected once per game instance. Each
+  // balloon SVG references gradients by id without redefining them,
+  // avoiding duplicate DOM ids (which break gradients on Safari).
+  const SVG_NS = "http://www.w3.org/2000/svg";
+
+  function buildSharedDefs(defsId) {
+    const svg = document.createElementNS(SVG_NS, "svg");
+    svg.setAttribute("class", "balloon-defs");
+    svg.setAttribute("aria-hidden", "true");
+    svg.setAttribute("width", "0");
+    svg.setAttribute("height", "0");
+    svg.style.position = "absolute";
+    svg.style.width = "0";
+    svg.style.height = "0";
+    svg.style.overflow = "hidden";
+    svg.style.pointerEvents = "none";
+    const defs = document.createElementNS(SVG_NS, "defs");
+    COLORS.forEach((color) => {
+      const grad = document.createElementNS(SVG_NS, "radialGradient");
+      grad.setAttribute("id", `${defsId}-${color.name}`);
+      grad.setAttribute("cx", "0.35");
+      grad.setAttribute("cy", "0.3");
+      grad.setAttribute("r", "0.75");
+      const s1 = document.createElementNS(SVG_NS, "stop");
+      s1.setAttribute("offset", "0%");
+      s1.setAttribute("stop-color", color.highlight);
+      const s2 = document.createElementNS(SVG_NS, "stop");
+      s2.setAttribute("offset", "100%");
+      s2.setAttribute("stop-color", color.hex);
+      grad.appendChild(s1);
+      grad.appendChild(s2);
+      defs.appendChild(grad);
+    });
+    svg.appendChild(defs);
+    return svg;
+  }
+
+  function buildBalloonBodyTemplate(color, defsId) {
+    const body = document.createElement("span");
+    body.className = "balloon-body";
+    body.innerHTML = `
+      <svg viewBox="0 0 64 84" xmlns="${SVG_NS}" aria-hidden="true">
+        <ellipse cx="32" cy="32" rx="24" ry="28" fill="url(#${defsId}-${color.name})"/>
         <ellipse cx="24" cy="22" rx="6" ry="9" fill="rgba(255,255,255,0.45)"/>
         <polygon points="29,58 35,58 32,64" fill="${color.hex}" stroke="rgba(0,0,0,0.12)" stroke-width="1"/>
         <path d="M32 64 Q28 72 34 80" stroke="rgba(80,80,80,0.55)" stroke-width="1.3" fill="none"/>
       </svg>
     `;
-  }
-
-  function createBalloonBody(color) {
-    const body = document.createElement("span");
-    body.className = "balloon-body";
-    body.innerHTML = balloonSvg(color);
     return body;
   }
 
@@ -95,6 +122,7 @@
             <p id="color-score-label">Score: 0</p>
             <p id="color-lives-label">Lives: ${hearts(START_LIVES)}</p>
             <p id="color-level-label">Level: 1</p>
+            <p id="color-best-label" class="meta-best hidden">Best: --</p>
           </div>
           <button id="color-restart-button" class="secondary-button" type="button">Restart</button>
         </header>
@@ -118,12 +146,20 @@
     const scoreLabel = container.querySelector("#color-score-label");
     const livesLabel = container.querySelector("#color-lives-label");
     const levelLabel = container.querySelector("#color-level-label");
+    const bestLabel = container.querySelector("#color-best-label");
     const targetPreview = container.querySelector("#color-target-preview");
     const playArea = container.querySelector("#color-play-area");
     const overlay = container.querySelector("#color-overlay");
     const banner = container.querySelector("#color-banner");
     const statusMessage = container.querySelector("#color-status-message");
     const restartButton = container.querySelector("#color-restart-button");
+
+    const storage = () => window.Playlab && window.Playlab.storage;
+    const BEST_KEY = "color-pop";
+
+    const defsId = `cp-defs-${Math.random().toString(36).slice(2, 8)}`;
+    const sharedDefsSvg = buildSharedDefs(defsId);
+    playArea.appendChild(sharedDefsSvg);
 
     // Phases: "intro" | "wave" | "waveComplete" | "transition" | "ended"
     let phase = "intro";
@@ -145,7 +181,7 @@
     let balloonIdCounter = 0;
 
     const balloonBodyTemplateByColor = new Map(
-      COLORS.map((color) => [color.name, createBalloonBody(color)]),
+      COLORS.map((color) => [color.name, buildBalloonBodyTemplate(color, defsId)]),
     );
     const balloonById = new Map();
 
@@ -165,6 +201,18 @@
       scoreLabel.textContent = `Score: ${score}`;
       livesLabel.textContent = `Lives: ${hearts(lives)}`;
       levelLabel.textContent = `Level: ${level}`;
+    }
+
+    function paintBestLabel() {
+      const s = storage();
+      if (!s || !bestLabel) return;
+      const best = s.getBest(BEST_KEY);
+      if (best == null) {
+        bestLabel.classList.add("hidden");
+      } else {
+        bestLabel.textContent = `Best: Lv ${best}`;
+        bestLabel.classList.remove("hidden");
+      }
     }
 
     function paintTarget() {
@@ -433,6 +481,7 @@
 
       paintMeta();
       paintTarget();
+      paintBestLabel();
       setStatus("", null);
 
       measureArea();
@@ -460,10 +509,21 @@
       banner.classList.add("hidden");
       clearBalloons();
 
+      const s = storage();
+      let bestNote = "";
+      let newBest = null;
+      if (s) {
+        newBest = s.setBestHigher(BEST_KEY, level);
+        if (newBest === level) bestNote = `<p class="overlay-best">New best: Level ${level}!</p>`;
+        else if (newBest != null) bestNote = `<p class="overlay-best">Best: Level ${newBest}</p>`;
+        paintBestLabel();
+      }
+
       overlay.innerHTML = `
         <div class="color-overlay-card">
           <h3>Game over</h3>
           <p>You reached <strong>Level ${level}</strong> and popped <strong>${score}</strong> balloons.</p>
+          ${bestNote}
           <button id="color-overlay-restart" class="primary-button" type="button">Play Again</button>
         </div>
       `;

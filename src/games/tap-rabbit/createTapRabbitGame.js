@@ -40,6 +40,7 @@
             <p id="rabbit-score-label">Score: 0</p>
             <p id="rabbit-lives-label">Lives: ${hearts(START_LIVES)}</p>
             <p id="rabbit-level-label">Level: 1</p>
+            <p id="rabbit-best-label" class="meta-best hidden">Best: --</p>
           </div>
           <button id="rabbit-restart-button" class="secondary-button" type="button">Restart</button>
         </header>
@@ -70,25 +71,47 @@
     const scoreLabel = container.querySelector("#rabbit-score-label");
     const livesLabel = container.querySelector("#rabbit-lives-label");
     const levelLabel = container.querySelector("#rabbit-level-label");
-    const field = container.querySelector("#rabbit-field");
+    const bestLabel = container.querySelector("#rabbit-best-label");
     const burrowsEl = container.querySelector("#rabbit-burrows");
     const statusMessage = container.querySelector("#rabbit-status-message");
     const restartButton = container.querySelector("#rabbit-restart-button");
+
+    const storage = () => window.Playlab && window.Playlab.storage;
+    const BEST_KEY = "tap-rabbit";
 
     let score = 0;
     let lives = START_LIVES;
     let level = 1;
     let activeIndex = -1;
     let ended = false;
+    let paused = false;
     let popTimer = null;
     let hideTimer = null;
     let levelUpTimer = null;
+    let hitFadeTimer = null;
     let burrowButtons = [];
+    // Wall-clock target for the currently-active rabbit so we can
+    // resume correctly after a visibility/pause cycle.
+    let hideDeadline = 0;
+    let pendingPopDelay = 0;
+    let popScheduledAt = 0;
 
     function paintMeta() {
       scoreLabel.textContent = `Score: ${score}`;
       livesLabel.textContent = `Lives: ${hearts(lives)}`;
       levelLabel.textContent = `Level: ${level}`;
+    }
+
+    function paintBestLabel() {
+      const s = storage();
+      if (!s || !bestLabel) return;
+      const best = s.getBest(BEST_KEY);
+      if (best == null) {
+        bestLabel.classList.add("hidden");
+      } else {
+        bestLabel.textContent = `Best: ${best}`;
+        bestLabel.classList.remove("hidden");
+      }
     }
 
     function setStatus(text, variant) {
@@ -110,6 +133,10 @@
         clearTimeout(levelUpTimer);
         levelUpTimer = null;
       }
+      if (hitFadeTimer) {
+        clearTimeout(hitFadeTimer);
+        hitFadeTimer = null;
+      }
     }
 
     function clearActiveRabbit() {
@@ -127,7 +154,13 @@
       if (popTimer) {
         clearTimeout(popTimer);
       }
-      popTimer = setTimeout(showRabbit, delayMs);
+      pendingPopDelay = delayMs;
+      popScheduledAt = performance.now();
+      popTimer = setTimeout(() => {
+        popTimer = null;
+        pendingPopDelay = 0;
+        showRabbit();
+      }, delayMs);
     }
 
     function onRabbitEscape() {
@@ -160,11 +193,14 @@
       burrow.classList.add("has-rabbit");
       burrow.setAttribute("aria-label", "Bunny! Catch it now!");
 
+      const duration = getVisibleDuration(level);
+      hideDeadline = performance.now() + duration;
       hideTimer = setTimeout(() => {
+        hideTimer = null;
         const escapedIndex = activeIndex;
         clearActiveRabbit();
         if (escapedIndex >= 0) onRabbitEscape();
-      }, getVisibleDuration(level));
+      }, duration);
     }
 
     function levelUp() {
@@ -192,7 +228,16 @@
       burrowButtons.forEach((button) => {
         button.disabled = true;
       });
-      setStatus(`Game over! You scored ${score} points. Press restart for another round.`, "end");
+
+      const s = storage();
+      let bestSuffix = "";
+      if (s) {
+        const newBest = s.setBestHigher(BEST_KEY, score);
+        if (newBest === score && score > 0) bestSuffix = " New best!";
+        paintBestLabel();
+      }
+
+      setStatus(`Game over! You scored ${score} points.${bestSuffix} Press restart for another round.`, "end");
       const a = audio();
       if (a) a.play("win");
     }
@@ -210,10 +255,16 @@
 
       const burrow = burrowButtons[index];
       burrow.classList.add("is-hit");
-      setTimeout(() => burrow.classList.remove("is-hit"), 180);
+      if (hitFadeTimer) clearTimeout(hitFadeTimer);
+      hitFadeTimer = setTimeout(() => {
+        hitFadeTimer = null;
+        burrow.classList.remove("is-hit");
+      }, 180);
 
-      clearTimeout(hideTimer);
-      hideTimer = null;
+      if (hideTimer) {
+        clearTimeout(hideTimer);
+        hideTimer = null;
+      }
       clearActiveRabbit();
 
       score += 1;
@@ -261,7 +312,9 @@
       level = 1;
       activeIndex = -1;
       ended = false;
+      paused = false;
       paintMeta();
+      paintBestLabel();
       renderField();
       setStatus("Catch as many rabbits as you can. Levels increase over time.", null);
       const a = audio();
@@ -269,6 +322,47 @@
       schedulePop(520);
       scheduleLevelUp();
     }
+
+    function onVisibilityChange() {
+      if (ended) return;
+      if (document.hidden && !paused) {
+        paused = true;
+        const now = performance.now();
+        if (hideTimer) {
+          clearTimeout(hideTimer);
+          hideTimer = null;
+          hideDeadline = Math.max(0, hideDeadline - now);
+        } else {
+          hideDeadline = 0;
+        }
+        if (popTimer) {
+          clearTimeout(popTimer);
+          popTimer = null;
+          const elapsed = now - popScheduledAt;
+          pendingPopDelay = Math.max(60, pendingPopDelay - elapsed);
+        }
+        if (levelUpTimer) {
+          clearTimeout(levelUpTimer);
+          levelUpTimer = null;
+        }
+      } else if (!document.hidden && paused) {
+        paused = false;
+        if (activeIndex >= 0 && hideDeadline > 0) {
+          const remaining = hideDeadline;
+          hideDeadline = performance.now() + remaining;
+          hideTimer = setTimeout(() => {
+            hideTimer = null;
+            const escapedIndex = activeIndex;
+            clearActiveRabbit();
+            if (escapedIndex >= 0) onRabbitEscape();
+          }, remaining);
+        } else if (pendingPopDelay > 0) {
+          schedulePop(pendingPopDelay);
+        }
+        scheduleLevelUp();
+      }
+    }
+    document.addEventListener("visibilitychange", onVisibilityChange);
 
     restartButton.addEventListener("click", () => {
       const a = audio();
@@ -280,7 +374,9 @@
 
     return {
       destroy() {
+        ended = true;
         clearTimers();
+        document.removeEventListener("visibilitychange", onVisibilityChange);
         container.innerHTML = "";
       },
     };

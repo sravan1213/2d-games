@@ -330,6 +330,7 @@
             <p id="shape-score-label">Score: 0</p>
             <p id="shape-lives-label">Lives: ❤❤❤</p>
             <p id="shape-time-label">Time: 5.0s</p>
+            <p id="shape-best-label" class="meta-best hidden">Best: --</p>
           </div>
           <div class="shape-sprint-actions">
             <button id="shape-speech-toggle" class="secondary-button" type="button">Speech: On</button>
@@ -356,6 +357,7 @@
     const scoreLabel = container.querySelector("#shape-score-label");
     const livesLabel = container.querySelector("#shape-lives-label");
     const timeLabel = container.querySelector("#shape-time-label");
+    const bestLabel = container.querySelector("#shape-best-label");
     const targetHint = container.querySelector("#shape-target-hint");
     const targetPreview = container.querySelector("#shape-target-preview");
     const board = container.querySelector("#shape-board");
@@ -364,17 +366,22 @@
     const restartButton = container.querySelector("#shape-restart-button");
     const speechToggleButton = container.querySelector("#shape-speech-toggle");
 
+    const storage = () => window.Playlab && window.Playlab.storage;
+    const BEST_KEY = "shape-sprint";
+
     let score = 0;
     let lives = 3;
     let round = 1;
     let ended = false;
+    let paused = false;
     let activeTheme = pickRandom(THEMES);
     let activeTarget = null;
     let lastTargetSymbol = null;
     let roundDurationMs = 5000;
     let deadline = 0;
-    let tickTimer = null;
+    let rafId = 0;
     let nextRoundTimer = null;
+    let pausedRemainingMs = 0;
     let speechEnabled = loadSpeechEnabled();
 
     function speakInstruction(text) {
@@ -401,13 +408,25 @@
     }
 
     function clearTimers() {
-      if (tickTimer) {
-        clearInterval(tickTimer);
-        tickTimer = null;
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+        rafId = 0;
       }
       if (nextRoundTimer) {
         clearTimeout(nextRoundTimer);
         nextRoundTimer = null;
+      }
+    }
+
+    function paintBestLabel() {
+      const s = storage();
+      if (!s || !bestLabel) return;
+      const best = s.getBest(BEST_KEY);
+      if (best == null) {
+        bestLabel.classList.add("hidden");
+      } else {
+        bestLabel.textContent = `Best: ${best}`;
+        bestLabel.classList.remove("hidden");
       }
     }
 
@@ -431,7 +450,13 @@
       const ratio = roundDurationMs > 0 ? remaining / roundDurationMs : 0;
       timerFill.style.width = `${Math.max(0, Math.min(1, ratio)) * 100}%`;
       timeLabel.textContent = `Time: ${(remaining / 1000).toFixed(1)}s`;
-      if (remaining <= 0) onTimeout();
+      if (remaining <= 0) {
+        onTimeout();
+        return;
+      }
+      if (!ended && !paused) {
+        rafId = requestAnimationFrame(paintTimer);
+      }
     }
 
     function renderRound() {
@@ -487,7 +512,6 @@
       timerFill.style.width = "100%";
       paintTimer();
 
-      tickTimer = setInterval(paintTimer, 60);
       setStatus(`Round ${round}: Find ${activeTarget.name}!`, null);
       speakInstruction(activeTarget.name);
     }
@@ -531,6 +555,8 @@
       lives -= 1;
       paintMeta();
       button.classList.add("is-wrong");
+      const correct = board.querySelector('.shape-tile[data-target="1"]');
+      if (correct) correct.classList.add("is-hint");
       setStatus(`Oops! Wrong ${activeTheme.hintNoun}.`, "warn");
       if (a) a.play("miss");
       speakInstruction("Oops, try again.");
@@ -541,7 +567,7 @@
       }
 
       round += 1;
-      nextRoundTimer = setTimeout(renderRound, 360);
+      nextRoundTimer = setTimeout(renderRound, 520);
     }
 
     function endGame() {
@@ -551,8 +577,17 @@
         el.disabled = true;
       });
       timerFill.style.width = "0%";
+
+      const s = storage();
+      let bestSuffix = "";
+      if (s) {
+        const newBest = s.setBestHigher(BEST_KEY, score);
+        if (newBest === score && score > 0) bestSuffix = " New best!";
+        paintBestLabel();
+      }
+
       setStatus(
-        `Game over! Final score: ${score}. Tap restart to play again.`,
+        `Game over! Final score: ${score}.${bestSuffix} Tap restart to play again.`,
         "end",
       );
       const a = audio();
@@ -566,15 +601,37 @@
       lives = 3;
       round = 1;
       ended = false;
+      paused = false;
       activeTheme = pickRandom(THEMES);
       lastTargetSymbol = null;
       paintMeta();
+      paintBestLabel();
       setStatus("Ready... go!", null);
       const a = audio();
       if (a) a.play("levelStart");
       speakInstruction(`${activeTheme.hintNoun}.`);
       renderRound();
     }
+
+    function onVisibilityChange() {
+      if (ended) return;
+      if (document.hidden) {
+        if (rafId) {
+          cancelAnimationFrame(rafId);
+          rafId = 0;
+        }
+        paused = true;
+        pausedRemainingMs = Math.max(0, deadline - performance.now());
+        if (canSpeak) window.speechSynthesis.cancel();
+      } else if (paused) {
+        paused = false;
+        if (pausedRemainingMs > 0) {
+          deadline = performance.now() + pausedRemainingMs;
+        }
+        paintTimer();
+      }
+    }
+    document.addEventListener("visibilitychange", onVisibilityChange);
 
     if (speechToggleButton) {
       speechToggleButton.addEventListener("click", () => {
@@ -598,7 +655,9 @@
 
     return {
       destroy() {
+        ended = true;
         clearTimers();
+        document.removeEventListener("visibilitychange", onVisibilityChange);
         if (canSpeak) window.speechSynthesis.cancel();
         container.innerHTML = "";
       },

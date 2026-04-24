@@ -1,4 +1,4 @@
-const CACHE_VERSION = "playlab-v14";
+const CACHE_VERSION = "playlab-v15";
 const CORE_ASSETS = [
   "./",
   "./index.html",
@@ -10,6 +10,7 @@ const CORE_ASSETS = [
   "./src/games/shape-sprint/createShapeSprintGame.js",
   "./src/games/color-pop/createColorPopGame.js",
   "./src/games/tap-rabbit/createTapRabbitGame.js",
+  "./src/games/find-odd/createFindOddGame.js",
   "./manifest.webmanifest",
   "./icons/icon.svg",
   "./icons/icon-maskable.svg",

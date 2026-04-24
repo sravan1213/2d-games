@@ -2555,3 +2555,82 @@ body.is-playing .game-mount {
   color: var(--muted);
   font-size: 0.9rem;
 }
+
+/* Best-score chip on landing cards */
+.meta-chip-best {
+  background: linear-gradient(135deg, #fff1c9, #ffe1f1);
+  color: #a2651b;
+  box-shadow: inset 0 0 0 1px rgba(255, 181, 76, 0.35);
+}
+
+/* Best-score label inside in-game meta bars */
+.meta-best {
+  font-weight: 800;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.meta-best.hidden {
+  display: none;
+}
+
+body.is-playing .meta-best {
+  font-size: 0.85rem;
+}
+
+/* Briefly hint the correct tile after a wrong answer */
+.shape-tile.is-hint,
+.odd-tile.is-hint {
+  animation: playlab-hint-pulse 0.52s ease-in-out 2;
+  box-shadow: 0 0 0 3px rgba(74, 209, 138, 0.55), 0 8px 22px rgba(74, 209, 138, 0.2);
+  border-color: #7ad69b !important;
+}
+
+@keyframes playlab-hint-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.06); }
+}
+
+/* Prevent tap-delay and improve rendering on interactive elements.
+   Kept here as a small shared addition; individual tiles may define their own. */
+.tile,
+.shape-tile,
+.odd-tile,
+.rabbit-burrow,
+.balloon,
+.game-card button,
+.primary-button,
+.secondary-button {
+  touch-action: manipulation;
+}
+
+/* Shared <defs> for Color Pop balloons — kept out of layout. */
+.balloon-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* Overlay "best" note in Color Pop end screen */
+.overlay-best {
+  margin: 4px 0 0;
+  font-weight: 800;
+  color: #a2651b;
+}
+
+/* Respect reduced motion preferences across decorative animations */
+@media (prefers-reduced-motion: reduce) {
+  .shape-tile.is-hint,
+  .odd-tile.is-hint {
+    animation: none;
+  }
+  .floaty,
+  .blob,
+  .sparkle,
+  .card-sparkle {
+    animation: none !important;
+  }
+}
+

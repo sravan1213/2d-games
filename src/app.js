@@ -21,12 +21,16 @@
     gameShell.classList.add("hidden");
     landingScreen.classList.remove("hidden");
     document.body.classList.remove("is-playing");
+    renderGameCards();
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }
 
   function openGame(gameId) {
     const game = gameRegistry.find(
-      (entry) => entry.id === gameId && !entry.comingSoon && typeof entry.launch === "function"
+      (entry) =>
+        entry.id === gameId &&
+        !entry.comingSoon &&
+        typeof entry.launch === "function",
     );
     if (!game) return;
 
@@ -47,9 +51,29 @@
     });
   }
 
+  const storage = window.Playlab && window.Playlab.storage;
+
+  function formatBestLabel(gameId) {
+    if (!storage) return null;
+    const value = storage.getBest(gameId);
+    if (value == null) return null;
+    switch (gameId) {
+      case "color-pop":
+      case "find-odd":
+        return `🏆 Best: Lv ${value}`;
+      case "shape-sprint":
+      case "tap-rabbit":
+        return `🏆 Best: ${value}`;
+      default:
+        return `🏆 Best: ${value}`;
+    }
+  }
+
   function renderGameCards() {
     if (!gamesGrid) return;
-    gamesGrid.innerHTML = "";
+    gamesGrid.textContent = "";
+
+    const frag = document.createDocumentFragment();
 
     gameRegistry.forEach((game) => {
       const card = document.createElement("article");
@@ -58,38 +82,64 @@
       const themeFrom = (game.theme && game.theme.from) || "#7c5cff";
       const themeTo = (game.theme && game.theme.to) || "#ff6fb5";
 
-      const tagClass = game.comingSoon ? "game-tag soon" : "game-tag";
-      const tagLabel = game.status || (game.comingSoon ? "Soon" : "Play");
-      const buttonClass = game.comingSoon ? "secondary-button" : "primary-button";
-      const buttonLabel = game.comingSoon ? "Coming Soon" : "Play Now";
-      const disabledAttr = game.comingSoon ? "disabled" : "";
+      const art = document.createElement("div");
+      art.className = "card-art";
+      art.style.background = `linear-gradient(135deg, ${themeFrom}, ${themeTo})`;
+      const sparkA = document.createElement("span");
+      sparkA.className = "card-sparkle one";
+      sparkA.textContent = "✦";
+      const sparkB = document.createElement("span");
+      sparkB.className = "card-sparkle two";
+      sparkB.textContent = "✦";
+      const iconSpan = document.createElement("span");
+      iconSpan.textContent = game.icon || "🎮";
+      art.append(sparkA, sparkB, iconSpan);
 
-      const tagsHtml = (game.tags || [])
-        .map((tag) => `<span class="meta-chip">${tag}</span>`)
-        .join("");
+      const tag = document.createElement("span");
+      tag.className = game.comingSoon ? "game-tag soon" : "game-tag";
+      tag.textContent = game.status || (game.comingSoon ? "Soon" : "Play");
 
-      card.innerHTML = `
-        <div class="card-art" style="background: linear-gradient(135deg, ${themeFrom}, ${themeTo});">
-          <span class="card-sparkle one">✦</span>
-          <span class="card-sparkle two">✦</span>
-          <span>${game.icon || "🎮"}</span>
-        </div>
-        <span class="${tagClass}">${tagLabel}</span>
-        <h3>${game.name}</h3>
-        <p>${game.description}</p>
-        <div class="meta">${tagsHtml}</div>
-        <button class="${buttonClass}" data-game-id="${game.id}" type="button" ${disabledAttr}>
-          ${buttonLabel}
-        </button>
-      `;
+      const title = document.createElement("h3");
+      title.textContent = game.name;
 
-      const launchButton = card.querySelector("button");
-      if (!game.comingSoon) {
-        launchButton.addEventListener("click", () => openGame(game.id));
+      const desc = document.createElement("p");
+      desc.textContent = game.description;
+
+      const meta = document.createElement("div");
+      meta.className = "meta";
+      (game.tags || []).forEach((tagText) => {
+        const chip = document.createElement("span");
+        chip.className = "meta-chip";
+        chip.textContent = tagText;
+        meta.appendChild(chip);
+      });
+
+      const bestText = !game.comingSoon ? formatBestLabel(game.id) : null;
+      if (bestText) {
+        const bestChip = document.createElement("span");
+        bestChip.className = "meta-chip meta-chip-best";
+        bestChip.textContent = `🏆 ${bestText}`;
+        meta.appendChild(bestChip);
       }
 
-      gamesGrid.appendChild(card);
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = game.comingSoon
+        ? "secondary-button"
+        : "primary-button";
+      button.dataset.gameId = game.id;
+      button.textContent = game.comingSoon ? "Coming Soon" : "Play Now";
+      if (game.comingSoon) {
+        button.disabled = true;
+      } else {
+        button.addEventListener("click", () => openGame(game.id));
+      }
+
+      card.append(art, tag, title, desc, meta, button);
+      frag.appendChild(card);
     });
+
+    gamesGrid.appendChild(frag);
   }
 
   if (backButton) backButton.addEventListener("click", showLanding);

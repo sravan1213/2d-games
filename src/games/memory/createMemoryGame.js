@@ -88,6 +88,9 @@
   }
 
   const audio = () => window.Playlab && window.Playlab.audio;
+  const storage = () => window.Playlab && window.Playlab.storage;
+
+  const BEST_KEY = "memory-match";
 
   function createMemoryGame({ container }) {
     container.innerHTML = `
@@ -96,6 +99,7 @@
           <div class="memory-meta">
             <p id="memory-level-label">Level 1</p>
             <p id="memory-moves-label">Moves: 0</p>
+            <p id="memory-best-label" class="meta-best hidden">Best: --</p>
           </div>
           <button id="memory-restart-button" class="secondary-button" type="button">Restart</button>
         </header>
@@ -108,6 +112,7 @@
 
     const levelLabel = container.querySelector("#memory-level-label");
     const movesLabel = container.querySelector("#memory-moves-label");
+    const bestLabel = container.querySelector("#memory-best-label");
     const board = container.querySelector("#memory-board");
     const statusMessage = container.querySelector("#memory-status-message");
     const restartButton = container.querySelector("#memory-restart-button");
@@ -123,6 +128,7 @@
     let isBoardLocked = false;
     let matchCount = 0;
     let transitionTimer = null;
+    const tileElementById = new Map();
 
     function resetRoundState() {
       firstChoiceId = null;
@@ -137,34 +143,49 @@
       }
     }
 
+    function applyTileClasses(tile) {
+      const el = tileElementById.get(tile.id);
+      if (!el) return;
+      el.classList.toggle("flipped", tile.isFlipped || tile.isMatched);
+      el.classList.toggle("matched", tile.isMatched);
+      if (tile.isMatched) {
+        el.setAttribute("aria-disabled", "true");
+        el.setAttribute("aria-label", `Matched ${tile.image}`);
+      } else {
+        el.removeAttribute("aria-disabled");
+        el.setAttribute("aria-label", "Memory tile");
+      }
+    }
+
     function setTileState(id, updates) {
-      tiles = tiles.map((tile) =>
-        tile.id === id ? { ...tile, ...updates } : tile
-      );
+      const tile = tiles.find((t) => t.id === id);
+      if (!tile) return;
+      Object.assign(tile, updates);
+      applyTileClasses(tile);
+    }
+
+    function paintBestLabel() {
+      const s = storage();
+      if (!s || !bestLabel) return;
+      const best = s.getBest(`${BEST_KEY}:level${level}`);
+      if (best == null) {
+        bestLabel.textContent = `Best: --`;
+        bestLabel.classList.add("hidden");
+      } else {
+        bestLabel.textContent = `Best: ${best} moves`;
+        bestLabel.classList.remove("hidden");
+      }
     }
 
     function renderBoard() {
       board.innerHTML = "";
+      tileElementById.clear();
+      const frag = document.createDocumentFragment();
       tiles.forEach((tile) => {
         const tileButton = document.createElement("button");
         tileButton.className = "tile";
         tileButton.dataset.id = tile.id;
         tileButton.type = "button";
-        tileButton.setAttribute(
-          "aria-label",
-          tile.isMatched ? `Matched ${tile.image}` : "Memory tile"
-        );
-
-        if (tile.isFlipped || tile.isMatched) {
-          tileButton.classList.add("flipped");
-        }
-        if (tile.isMatched) {
-          tileButton.classList.add("matched");
-          tileButton.setAttribute("aria-disabled", "true");
-        }
-        if (isBoardLocked && !tile.isMatched) {
-          tileButton.classList.add("is-locked");
-        }
 
         tileButton.innerHTML = `
           <span class="tile-face tile-back" aria-hidden="true"></span>
@@ -172,8 +193,11 @@
         `;
 
         tileButton.addEventListener("click", () => onTileClick(tile.id));
-        board.appendChild(tileButton);
+        tileElementById.set(tile.id, tileButton);
+        applyTileClasses(tile);
+        frag.appendChild(tileButton);
       });
+      board.appendChild(frag);
     }
 
     function setStatus(text, variant) {
@@ -184,9 +208,10 @@
 
     function shakeTiles(ids) {
       ids.forEach((id) => {
-        const el = board.querySelector(`.tile[data-id="${CSS.escape(id)}"]`);
+        const el = tileElementById.get(id);
         if (!el) return;
         el.classList.remove("shake");
+        // Force reflow so the animation can be re-triggered.
         void el.offsetWidth;
         el.classList.add("shake");
       });
@@ -203,6 +228,7 @@
 
       levelLabel.textContent = `Level ${currentLevel}`;
       movesLabel.textContent = `Moves: 0`;
+      paintBestLabel();
       setStatus(
         `Find ${currentConfig.pairs} pairs · Round ${sizeRound}/${roundsPerSize}`,
         null
@@ -220,11 +246,20 @@
 
     function completeLevel() {
       isBoardLocked = true;
+
+      const s = storage();
+      let bestMessage = "";
+      if (s) {
+        const newBest = s.setBestLower(`${BEST_KEY}:level${level}`, moves);
+        if (newBest === moves) bestMessage = " New best!";
+        paintBestLabel();
+      }
+
       const hasAnotherRoundInSameSize = sizeRound < roundsPerSize;
       setStatus(
         hasAnotherRoundInSameSize
-          ? "🎉 Great job! Same grid, next round..."
-          : "🎉 Great job! Next level starts soon...",
+          ? `🎉 Great job!${bestMessage} Next round coming...`
+          : `🎉 Level complete!${bestMessage} Next level coming...`,
         "win"
       );
       const a = audio();
@@ -255,7 +290,6 @@
         setStatus("Nice match!", "match");
         const a = audio();
         if (a) a.play("match");
-        renderBoard();
         resetRoundState();
 
         if (matchCount === currentConfig.pairs) {
@@ -271,7 +305,6 @@
       transitionTimer = setTimeout(() => {
         setTileState(firstTile.id, { isFlipped: false });
         setTileState(secondTile.id, { isFlipped: false });
-        renderBoard();
         resetRoundState();
       }, 850);
     }
@@ -285,7 +318,6 @@
       if (a) a.play("flip");
 
       setTileState(tileId, { isFlipped: true });
-      renderBoard();
 
       if (!firstChoiceId) {
         firstChoiceId = tileId;
@@ -302,6 +334,7 @@
     restartButton.addEventListener("click", () => {
       const a = audio();
       if (a) a.play("click");
+      sizeRound = 1;
       startLevel(level);
     });
     startLevel(level);
@@ -309,6 +342,7 @@
     return {
       destroy() {
         clearTransitionTimer();
+        tileElementById.clear();
         container.innerHTML = "";
       },
     };
