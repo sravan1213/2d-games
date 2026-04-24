@@ -361,6 +361,7 @@
       if (s) {
         const newBest = s.setBestHigher(BEST_KEY, level);
         if (newBest === level && level > 1) bestSuffix = " New best!";
+        s.recordResult(BEST_KEY, { score, level });
         paintBestLabel();
       }
 
@@ -381,6 +382,8 @@
       paused = false;
       winsThisLevel = 0;
       lastSetLabel = "";
+      const sPlay = storage();
+      if (sPlay) sPlay.startPlay(BEST_KEY);
       paintMeta();
       paintBestLabel();
       setStatus("Count all the items, then pick the right number!", null);

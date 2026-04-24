@@ -194,6 +194,52 @@
     onChange,
   };
 
+  // ── Unified per-game stats ────────────────────────────────────────
+  const STATS_PREFIX = "playlab-stats:";
+
+  function defaultStats() {
+    return { bestScore: null, bestLevel: null, timesPlayed: 0, lastPlayed: null };
+  }
+
+  function getStats(gameId) {
+    try {
+      const raw = localStorage.getItem(STATS_PREFIX + gameId);
+      if (!raw) return defaultStats();
+      return { ...defaultStats(), ...JSON.parse(raw) };
+    } catch (_) {
+      return defaultStats();
+    }
+  }
+
+  function saveStatsInternal(gameId, stats) {
+    try {
+      localStorage.setItem(STATS_PREFIX + gameId, JSON.stringify(stats));
+    } catch (_) {
+      // ignore quota errors
+    }
+  }
+
+  function startPlay(gameId) {
+    const s = getStats(gameId);
+    s.timesPlayed = (s.timesPlayed || 0) + 1;
+    s.lastPlayed = Date.now();
+    saveStatsInternal(gameId, s);
+    return s;
+  }
+
+  function recordResult(gameId, { score, level } = {}) {
+    const s = getStats(gameId);
+    if (score != null && Number.isFinite(score)) {
+      if (s.bestScore == null || score > s.bestScore) s.bestScore = score;
+    }
+    if (level != null && Number.isFinite(level)) {
+      if (s.bestLevel == null || level > s.bestLevel) s.bestLevel = level;
+    }
+    saveStatsInternal(gameId, s);
+    return s;
+  }
+
+  // ── Per-game personal-best (legacy quick-access helpers) ─────────
   const BEST_PREFIX = "playlab-best:";
   const storage = {
     getBest(gameId) {
@@ -233,6 +279,10 @@
       return current;
     },
   };
+
+  storage.getStats = getStats;
+  storage.startPlay = startPlay;
+  storage.recordResult = recordResult;
 
   window.Playlab.storage = storage;
 })();

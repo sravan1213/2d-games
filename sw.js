@@ -1,4 +1,4 @@
-const CACHE_VERSION = "playlab-v16";
+const CACHE_VERSION = "playlab-v17";
 const CORE_ASSETS = [
   "./",
   "./index.html",

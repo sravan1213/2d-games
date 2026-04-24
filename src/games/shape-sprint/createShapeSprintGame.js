@@ -583,6 +583,7 @@
       if (s) {
         const newBest = s.setBestHigher(BEST_KEY, score);
         if (newBest === score && score > 0) bestSuffix = " New best!";
+        s.recordResult(BEST_KEY, { score });
         paintBestLabel();
       }
 
@@ -604,6 +605,8 @@
       paused = false;
       activeTheme = pickRandom(THEMES);
       lastTargetSymbol = null;
+      const sPlay = storage();
+      if (sPlay) sPlay.startPlay(BEST_KEY);
       paintMeta();
       paintBestLabel();
       setStatus("Ready... go!", null);

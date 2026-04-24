@@ -368,6 +368,7 @@
       if (s) {
         const newBest = s.setBestHigher(BEST_KEY, score);
         if (newBest === score && score > 0) bestSuffix = " New best!";
+        s.recordResult(BEST_KEY, { score });
         paintBestLabel();
       }
 
@@ -401,6 +402,8 @@
     restartButton.addEventListener("click", () => {
       const sfx = audio();
       if (sfx) sfx.play("click");
+      const sPlay = storage();
+      if (sPlay) sPlay.startPlay(BEST_KEY);
       score = 0;
       lives = 3;
       round = 1;
@@ -414,6 +417,8 @@
       renderRound();
     });
 
+    const sInit = storage();
+    if (sInit) sInit.startPlay(BEST_KEY);
     paintMeta();
     paintBestLabel();
     setStatus("Find the shadow that matches the colored picture!", null);

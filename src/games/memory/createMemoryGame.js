@@ -248,6 +248,7 @@
       isBoardLocked = true;
 
       const s = storage();
+      if (s) s.recordResult(BEST_KEY, { level });
       let bestMessage = "";
       if (s) {
         const newBest = s.setBestLower(`${BEST_KEY}:level${level}`, moves);
@@ -334,9 +335,14 @@
     restartButton.addEventListener("click", () => {
       const a = audio();
       if (a) a.play("click");
+      const s = storage();
+      if (s) s.startPlay(BEST_KEY);
       sizeRound = 1;
       startLevel(level);
     });
+
+    const sInit = storage();
+    if (sInit) sInit.startPlay(BEST_KEY);
     startLevel(level);
 
     return {

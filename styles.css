@@ -2997,4 +2997,290 @@ body.is-playing .meta-best {
 .count-status.warn { color: #c05b1e; }
 .count-status.end  { color: #7c5cff; }
 
+/* ═══════════════════════════════════════════════════════════════════
+   TROPHY ROOM – Stats Dashboard
+   ═══════════════════════════════════════════════════════════════════ */
 
+/* ── Screen shell ── */
+.stats-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg, #f4f1ff);
+  overflow: hidden;
+}
+.stats-screen.hidden { display: none; }
+
+/* ── Scrollable body ── */
+.stats-body {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 20px 16px 48px;
+}
+
+/* ── Hero / summary strip ── */
+.stats-hero {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.stats-tagline {
+  margin: 0 0 16px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--muted, #7a72a0);
+}
+
+.stats-summary {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.stats-summary-item {
+  background: #fff;
+  border-radius: 18px;
+  padding: 12px 22px;
+  min-width: 90px;
+  text-align: center;
+  box-shadow: 0 2px 12px rgba(124, 92, 255, 0.13);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+.stats-summary-val {
+  font-size: 2rem;
+  font-weight: 900;
+  font-family: "Fredoka", "Nunito", sans-serif;
+  color: var(--brand, #7c5cff);
+  line-height: 1;
+}
+
+.stats-summary-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--muted, #7a72a0);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ── Cards grid ── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+@media (min-width: 540px) {
+  .stats-grid { grid-template-columns: repeat(3, 1fr); gap: 16px; }
+}
+
+@media (min-width: 900px) {
+  .stats-grid { grid-template-columns: repeat(4, 1fr); gap: 18px; }
+  .stats-body { padding: 24px 32px 64px; }
+}
+
+/* ── Individual stat card ── */
+.stats-card {
+  border-radius: 20px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow:
+    0 4px 18px rgba(124, 92, 255, 0.12),
+    0 1px 4px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  position: relative;
+}
+
+.stats-card:not(.is-locked):not(.is-unplayed):hover,
+.stats-card:not(.is-locked):not(.is-unplayed):focus-within {
+  transform: translateY(-5px);
+  box-shadow:
+    0 10px 32px rgba(124, 92, 255, 0.22),
+    0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+/* ── Card art header ── */
+.stats-card-art {
+  position: relative;
+  height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.stats-card-icon {
+  font-size: 2.8rem;
+  line-height: 1;
+  position: relative;
+  z-index: 1;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,0.22));
+}
+
+.stats-card-sparkle {
+  position: absolute;
+  font-size: 0.7rem;
+  color: rgba(255,255,255,0.75);
+  animation: sparkle-pulse 2.4s ease-in-out infinite;
+  pointer-events: none;
+}
+.stats-card-sparkle.one { top: 14px; left: 14px; animation-delay: 0s; }
+.stats-card-sparkle.two { bottom: 14px; right: 16px; animation-delay: 1.2s; }
+
+@keyframes sparkle-pulse {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50%       { opacity: 1;   transform: scale(1.5); }
+}
+
+.stats-crown {
+  position: absolute;
+  top: 6px;
+  right: 10px;
+  font-size: 1.1rem;
+  animation: crown-bounce 1.8s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 2;
+}
+
+@keyframes crown-bounce {
+  0%, 100% { transform: translateY(0) rotate(-5deg); }
+  50%       { transform: translateY(-4px) rotate(5deg); }
+}
+
+/* ── Card body ── */
+.stats-card-body {
+  padding: 12px 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.stats-card-name {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: var(--text, #2b2360);
+  margin: 0;
+  line-height: 1.2;
+}
+
+/* ── Star rating ── */
+.stats-stars {
+  display: flex;
+  gap: 2px;
+  line-height: 1;
+}
+
+.star {
+  font-size: 1.25rem;
+  color: #d4cfe8;
+  transition: color 0.2s ease;
+}
+
+.star.filled {
+  color: #ffd43d;
+  text-shadow: 0 1px 6px rgba(255, 193, 0, 0.5);
+}
+
+/* ── Stat rows ── */
+.stats-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+}
+
+.stats-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.stats-row-icon {
+  font-size: 0.9rem;
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.stats-row-label {
+  font-size: 0.73rem;
+  font-weight: 600;
+  color: var(--muted, #7a72a0);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stats-row-value {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--brand, #7c5cff);
+}
+
+/* ── Play button inside stats card ── */
+.stats-play-btn {
+  margin-top: auto;
+  padding: 7px 10px;
+  font-size: 0.82rem;
+  border-radius: 12px;
+  width: 100%;
+  text-align: center;
+}
+
+/* ── Unplayed card ── */
+.stats-card.is-unplayed .stats-card-art {
+  opacity: 0.55;
+}
+
+.stats-unplayed-msg {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--muted, #7a72a0);
+  margin: 0;
+  text-align: center;
+}
+
+/* ── Coming-soon / locked card ── */
+.stats-card.is-locked {
+  opacity: 0.72;
+  cursor: default;
+}
+
+.stats-card.is-locked .stats-card-art {
+  background: linear-gradient(135deg, #c8c4d8, #a09ab8) !important;
+}
+
+.stats-coming-msg {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--muted, #7a72a0);
+  margin: 0;
+  text-align: center;
+}
+
+/* ── Trophy button in header ── */
+#stats-button {
+  font-size: 1.2rem;
+}
+#stats-button {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  .stats-card-sparkle,
+  .stats-crown { animation: none; }
+  .stats-card { transition: none; }
+}

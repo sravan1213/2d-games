@@ -546,6 +546,7 @@
       if (s) {
         const newBest = s.setBestHigher(BEST_KEY, level);
         if (newBest === level && level > 1) bestSuffix = " New best!";
+        s.recordResult(BEST_KEY, { score, level });
         paintBestLabel();
       }
 
@@ -563,6 +564,8 @@
       paused = false;
       winsThisLevel = 0;
       activeCategoryId = "";
+      const sPlay = storage();
+      if (sPlay) sPlay.startPlay(BEST_KEY);
       paintMeta();
       paintBestLabel();
       setStatus("Find the odd one to level up!", null);

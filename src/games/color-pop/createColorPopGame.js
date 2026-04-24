@@ -479,6 +479,8 @@
       wavePops = 0;
       waveGoal = getWaveGoal(level);
 
+      const sPlay = storage();
+      if (sPlay) sPlay.startPlay(BEST_KEY);
       paintMeta();
       paintTarget();
       paintBestLabel();
@@ -516,6 +518,7 @@
         newBest = s.setBestHigher(BEST_KEY, level);
         if (newBest === level) bestNote = `<p class="overlay-best">New best: Level ${level}!</p>`;
         else if (newBest != null) bestNote = `<p class="overlay-best">Best: Level ${newBest}</p>`;
+        s.recordResult(BEST_KEY, { score, level });
         paintBestLabel();
       }
 
