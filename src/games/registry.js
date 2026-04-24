@@ -4,6 +4,8 @@
   const colorPopGame = window.Playlab?.games?.colorPop?.createColorPopGame;
   const tapRabbitGame = window.Playlab?.games?.tapRabbit?.createTapRabbitGame;
   const findOddGame = window.Playlab?.games?.findOdd?.createFindOddGame;
+  const shadowMatchGame = window.Playlab?.games?.shadowMatch?.createShadowMatchGame;
+  const countStarsGame = window.Playlab?.games?.countStars?.createCountStarsGame;
 
   const gameRegistry = [
     {
@@ -60,6 +62,28 @@
       status: "New",
       theme: { from: "#3ecfc0", to: "#ffb54c" },
       launch: findOddGame,
+    },
+    {
+      id: "shadow-match",
+      name: "Shadow Match",
+      tagline: "Match the silhouette",
+      description: "See a colourful picture, then tap its matching shadow. Can you tell shapes apart?",
+      icon: "🌑",
+      tags: ["Ages 4+", "Focus"],
+      status: "New",
+      theme: { from: "#7c5cff", to: "#3ecfc0" },
+      launch: shadowMatchGame,
+    },
+    {
+      id: "count-stars",
+      name: "Count the Stars",
+      tagline: "Count and pick the number",
+      description: "Count all the items on screen and pick the right number before time runs out!",
+      icon: "⭐",
+      tags: ["Ages 4+", "Numbers"],
+      status: "New",
+      theme: { from: "#ffb54c", to: "#4ad18a" },
+      launch: countStarsGame,
     },
     {
       id: "word-whiz",

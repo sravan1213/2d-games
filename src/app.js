@@ -60,9 +60,11 @@
     switch (gameId) {
       case "color-pop":
       case "find-odd":
+      case "count-stars":
         return `🏆 Best: Lv ${value}`;
       case "shape-sprint":
       case "tap-rabbit":
+      case "shadow-match":
         return `🏆 Best: ${value}`;
       default:
         return `🏆 Best: ${value}`;

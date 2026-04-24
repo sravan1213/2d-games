@@ -1063,7 +1063,9 @@ body.is-playing .game-mount {
   body.is-playing .shape-sprint-header,
   body.is-playing .color-pop-header,
   body.is-playing .rabbit-header,
-  body.is-playing .odd-one-header {
+  body.is-playing .odd-one-header,
+  body.is-playing .shadow-header,
+  body.is-playing .count-header {
     gap: 8px;
     padding: 0;
     justify-content: center;
@@ -1073,7 +1075,9 @@ body.is-playing .game-mount {
   body.is-playing .shape-sprint-meta,
   body.is-playing .color-pop-meta,
   body.is-playing .rabbit-meta,
-  body.is-playing .odd-one-meta {
+  body.is-playing .odd-one-meta,
+  body.is-playing .shadow-meta,
+  body.is-playing .count-meta {
     gap: 6px;
     justify-content: center;
   }
@@ -1082,7 +1086,9 @@ body.is-playing .game-mount {
   body.is-playing .shape-sprint-meta p,
   body.is-playing .color-pop-meta p,
   body.is-playing .rabbit-meta p,
-  body.is-playing .odd-one-meta p {
+  body.is-playing .odd-one-meta p,
+  body.is-playing .shadow-meta p,
+  body.is-playing .count-meta p {
     font-size: 0.76rem;
     padding: 4px 8px;
   }
@@ -1091,7 +1097,9 @@ body.is-playing .game-mount {
   body.is-playing .shape-sprint-header .secondary-button,
   body.is-playing .color-pop-header .secondary-button,
   body.is-playing .rabbit-header .secondary-button,
-  body.is-playing .odd-one-header .secondary-button {
+  body.is-playing .odd-one-header .secondary-button,
+  body.is-playing .shadow-header .secondary-button,
+  body.is-playing .count-header .secondary-button {
     font-size: 0.78rem;
     padding: 7px 10px;
   }
@@ -2273,21 +2281,27 @@ body.is-playing .game-mount {
   .memory-header,
   .shape-sprint-header,
   .color-pop-header,
-  .rabbit-header {
+  .rabbit-header,
+  .shadow-header,
+  .count-header {
     justify-content: center;
   }
 
   .memory-meta,
   .shape-sprint-meta,
   .color-pop-meta,
-  .rabbit-meta {
+  .rabbit-meta,
+  .shadow-meta,
+  .count-meta {
     justify-content: center;
   }
 
   .memory-meta p,
   .shape-sprint-meta p,
   .color-pop-meta p,
-  .rabbit-meta p {
+  .rabbit-meta p,
+  .shadow-meta p,
+  .count-meta p {
     font-size: 0.82rem;
     padding: 5px 10px;
   }
@@ -2623,7 +2637,11 @@ body.is-playing .meta-best {
 /* Respect reduced motion preferences across decorative animations */
 @media (prefers-reduced-motion: reduce) {
   .shape-tile.is-hint,
-  .odd-tile.is-hint {
+  .odd-tile.is-hint,
+  .shadow-tile.is-hint {
+    animation: none;
+  }
+  .count-item {
     animation: none;
   }
   .floaty,
@@ -2633,4 +2651,350 @@ body.is-playing .meta-best {
     animation: none !important;
   }
 }
+
+/* ─── Shadow Match ─────────────────────────────────────────────────── */
+
+.shadow-game {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 10px;
+  padding: 10px 14px;
+}
+
+.shadow-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex: 0 0 auto;
+}
+
+.shadow-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+}
+
+.shadow-meta p {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.shadow-target-card {
+  background: white;
+  border-radius: var(--radius-md);
+  border: 2.5px solid var(--border-soft);
+  padding: 10px 16px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+  box-shadow: var(--shadow-sm);
+}
+
+.shadow-target-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.shadow-target-glyph {
+  font-size: 3rem;
+  line-height: 1;
+  filter: drop-shadow(0 2px 10px rgba(124, 92, 255, 0.28));
+  user-select: none;
+}
+
+.shadow-target-name {
+  font-family: "Fredoka", "Nunito", sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--muted);
+  line-height: 1;
+}
+
+.shadow-board-wrap {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  padding: 0 4px;
+}
+
+.shadow-board {
+  container-type: size;
+  display: grid;
+  grid-template-columns: repeat(var(--shadow-cols, 2), 1fr);
+  grid-template-rows: repeat(var(--shadow-rows, 2), 1fr);
+  gap: 10px;
+  width: min(100%, calc(var(--shadow-aspect, 1) * 78vh));
+  aspect-ratio: var(--shadow-aspect, 1);
+}
+
+.shadow-tile {
+  container-type: size;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2.5px solid #e2d6ff;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, #f8f5ff, #fff9f5);
+  cursor: pointer;
+  transition: background 0.14s, border-color 0.14s, transform 0.1s, box-shadow 0.1s;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.shadow-tile:hover {
+  background: #f0eaff;
+  transform: scale(1.04);
+  box-shadow: 0 6px 18px rgba(124, 92, 255, 0.14);
+}
+
+.shadow-tile:active {
+  transform: scale(0.96);
+}
+
+/* The silhouette effect: emoji rendered as a solid dark shape. */
+.shadow-glyph {
+  display: block;
+  font-size: 54cqmin;
+  line-height: 1;
+  filter: brightness(0) opacity(0.76);
+  user-select: none;
+  pointer-events: none;
+  transition: filter 0.28s ease, transform 0.3s ease;
+}
+
+/* Reveal the real emoji colour on correct match. */
+.shadow-tile.is-correct .shadow-glyph {
+  filter: none;
+  transform: scale(1.14);
+}
+
+.shadow-tile.is-correct {
+  background: #ecfff3;
+  border-color: #7ad69b;
+  box-shadow: 0 0 0 3px rgba(74, 209, 138, 0.3);
+}
+
+.shadow-tile.is-wrong {
+  background: #fff2f6;
+  border-color: #f4a8c6;
+}
+
+.shadow-tile.is-hint {
+  animation: playlab-hint-pulse 0.52s ease-in-out 2;
+  box-shadow: 0 0 0 3px rgba(74, 209, 138, 0.55), 0 8px 22px rgba(74, 209, 138, 0.2);
+  border-color: #7ad69b !important;
+  background: #f0fff7;
+}
+
+.shadow-tile:disabled {
+  opacity: 0.6;
+  cursor: default;
+  transform: none;
+}
+
+.shadow-timer-track {
+  height: 8px;
+  border-radius: 999px;
+  background: #eee7ff;
+  overflow: hidden;
+  flex: 0 0 auto;
+}
+
+.shadow-timer-fill {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, #ffb54c 0%, #ff6fb5 55%, #7c5cff 100%);
+  transition: width 60ms linear;
+}
+
+.shadow-status {
+  margin: 0;
+  min-height: 20px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  flex: 0 0 auto;
+}
+
+.shadow-status.ok   { color: #1e7a3a; }
+.shadow-status.warn { color: #c05b1e; }
+.shadow-status.end  { color: #7c5cff; }
+
+/* ─── Count the Stars ──────────────────────────────────────────────── */
+
+.count-game {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 10px;
+  padding: 10px 14px;
+}
+
+.count-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex: 0 0 auto;
+}
+
+.count-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+}
+
+.count-meta p {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.count-target-card {
+  flex: 0 0 auto;
+  text-align: center;
+}
+
+.count-target-card .target-hint {
+  margin: 0;
+  font-family: "Fredoka", "Nunito", sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.count-board-wrap {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 160px;
+}
+
+.count-play-area {
+  flex: 1;
+  min-height: 160px;
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  background:
+    radial-gradient(ellipse at 20% 80%, rgba(255, 245, 180, 0.45) 0%, transparent 55%),
+    radial-gradient(ellipse at 78% 18%, rgba(195, 225, 255, 0.45) 0%, transparent 55%),
+    linear-gradient(160deg, #fffbf0 0%, #f0f8ff 100%);
+  border: 2.5px solid var(--border-soft);
+  box-shadow: inset 0 2px 8px rgba(124, 92, 255, 0.05);
+}
+
+.count-item {
+  position: absolute;
+  line-height: 1;
+  user-select: none;
+  pointer-events: none;
+  animation: count-pop-in 0.22s ease-out both;
+}
+
+@keyframes count-pop-in {
+  from { opacity: 0; transform: scale(0.3) rotate(-12deg); }
+  to   { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+
+/* 2-column grid on mobile (large tap targets); 4-column on wider screens. */
+.count-choices {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  flex: 0 0 auto;
+}
+
+@media (min-width: 480px) {
+  .count-choices {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.count-choice-btn {
+  font-family: "Fredoka", "Nunito", sans-serif;
+  font-size: 1.75rem;
+  font-weight: 700;
+  padding: 12px 8px;
+  border: 2.5px solid #e2d6ff;
+  border-radius: var(--radius-md);
+  background: white;
+  color: var(--text);
+  cursor: pointer;
+  transition: transform 0.1s, box-shadow 0.1s, background 0.12s, border-color 0.12s;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 3px 10px rgba(68, 48, 140, 0.08);
+}
+
+.count-choice-btn:hover {
+  background: #f7f4ff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(68, 48, 140, 0.14);
+}
+
+.count-choice-btn:active {
+  transform: scale(0.96);
+  box-shadow: 0 2px 6px rgba(68, 48, 140, 0.1);
+}
+
+.count-choice-btn.is-correct {
+  background: #ecfff3;
+  border-color: #7ad69b;
+  color: #1e7a3a;
+}
+
+.count-choice-btn.is-wrong {
+  background: #fff2f6;
+  border-color: #f4a8c6;
+  color: #c0345c;
+}
+
+.count-choice-btn:disabled {
+  opacity: 0.65;
+  cursor: default;
+  transform: none;
+}
+
+.count-timer-track {
+  height: 8px;
+  border-radius: 999px;
+  background: #eee7ff;
+  overflow: hidden;
+  flex: 0 0 auto;
+}
+
+.count-timer-fill {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, #4ad18a 0%, #3ecfc0 55%, #7c5cff 100%);
+  transition: width 60ms linear;
+}
+
+.count-status {
+  margin: 0;
+  min-height: 20px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  flex: 0 0 auto;
+}
+
+.count-status.ok   { color: #1e7a3a; }
+.count-status.warn { color: #c05b1e; }
+.count-status.end  { color: #7c5cff; }
+
 
