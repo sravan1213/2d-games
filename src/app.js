@@ -9,6 +9,7 @@
   const backButton = document.getElementById("back-button");
 
   let activeGameInstance = null;
+  let landingScrollY = 0;
 
   const audio = window.Playlab && window.Playlab.audio;
 
@@ -25,7 +26,7 @@
   }
 
   function showLanding(options = {}) {
-    const { skipHistory = false, silent = false } = options;
+    const { skipHistory = false, silent = false, restoreScroll = true } = options;
     if (activeGameInstance) {
       activeGameInstance.destroy();
       activeGameInstance = null;
@@ -38,7 +39,11 @@
       window.history.pushState({ screen: "home" }, "", "/");
     }
     renderGameCards();
-    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    window.scrollTo({
+      top: restoreScroll ? landingScrollY : 0,
+      left: 0,
+      behavior: "auto",
+    });
   }
 
   function openGame(gameId, options = {}) {
@@ -52,6 +57,13 @@
     if (!game) return;
 
     if (!silent && audio) audio.play("click");
+    if (!document.body.classList.contains("is-playing")) {
+      landingScrollY =
+        window.scrollY ||
+        document.documentElement.scrollTop ||
+        document.body.scrollTop ||
+        0;
+    }
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
     document.documentElement.scrollTop = 0;
     document.body.scrollTop = 0;
