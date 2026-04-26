@@ -15,6 +15,7 @@
     "shadow-match": { score: [6, 14, 24, 38] },
     "count-stars": { level: [3, 5, 8, 12] },
     "path-finder": { level: [3, 5, 8, 12] },
+    "fill-the-drink": { score: [40, 120, 260, 480] },
   };
 
   const LEVEL_GAMES = new Set([
