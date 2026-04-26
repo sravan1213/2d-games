@@ -1,4 +1,4 @@
-const CACHE_VERSION = "playlab-v22";
+const CACHE_VERSION = "playlab-v23";
 const CORE_ASSETS = [
   "./",
   "./index.html",
@@ -16,6 +16,7 @@ const CORE_ASSETS = [
   "./src/games/shadow-match/createShadowMatchGame.js",
   "./src/games/count-stars/createCountStarsGame.js",
   "./src/games/path-finder/createPathFinderGame.js",
+  "./src/games/fill-the-drink/createFillTheDrinkGame.js",
   "./games/memory-match/index.html",
   "./games/shape-sprint/index.html",
   "./games/color-pop/index.html",
@@ -24,6 +25,7 @@ const CORE_ASSETS = [
   "./games/shadow-match/index.html",
   "./games/count-stars/index.html",
   "./games/path-finder/index.html",
+  "./games/fill-the-drink/index.html",
   "./sitemap.xml",
   "./robots.txt",
   "./manifest.webmanifest",

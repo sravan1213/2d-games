@@ -7,6 +7,7 @@
   const shadowMatchGame = window.Playlab?.games?.shadowMatch?.createShadowMatchGame;
   const countStarsGame = window.Playlab?.games?.countStars?.createCountStarsGame;
   const pathFinderGame = window.Playlab?.games?.pathFinder?.createPathFinderGame;
+  const fillTheDrinkGame = window.Playlab?.games?.fillTheDrink?.createFillTheDrinkGame;
 
   const gameRegistry = [
     {
@@ -96,6 +97,17 @@
       status: "New",
       theme: { from: "#4ad18a", to: "#ffb54c" },
       launch: pathFinderGame,
+    },
+    {
+      id: "fill-the-drink",
+      name: "Fill the Drink",
+      tagline: "Pour to the perfect line",
+      description: "Hold to pour each order. Stop in the green zone — too little or spilling the cup scores nothing.",
+      icon: "🥤",
+      tags: ["Ages 5+", "Timing"],
+      status: "New",
+      theme: { from: "#ff8c6b", to: "#7c5cff" },
+      launch: fillTheDrinkGame,
     },
     {
       id: "word-whiz",
