@@ -6,6 +6,7 @@
   const findOddGame = window.Playlab?.games?.findOdd?.createFindOddGame;
   const shadowMatchGame = window.Playlab?.games?.shadowMatch?.createShadowMatchGame;
   const countStarsGame = window.Playlab?.games?.countStars?.createCountStarsGame;
+  const pathFinderGame = window.Playlab?.games?.pathFinder?.createPathFinderGame;
 
   const gameRegistry = [
     {
@@ -84,6 +85,17 @@
       status: "New",
       theme: { from: "#ffb54c", to: "#4ad18a" },
       launch: countStarsGame,
+    },
+    {
+      id: "path-finder",
+      name: "Path Finder",
+      tagline: "Guide bunny to carrot",
+      description: "Help the bunny reach the carrot by tapping the correct next tile.",
+      icon: "🥕",
+      tags: ["Ages 5+", "Strategy"],
+      status: "New",
+      theme: { from: "#4ad18a", to: "#ffb54c" },
+      launch: pathFinderGame,
     },
     {
       id: "word-whiz",

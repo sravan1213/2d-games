@@ -14,6 +14,7 @@
     "find-odd": { level: [3, 5, 8, 12] },
     "shadow-match": { score: [6, 14, 24, 38] },
     "count-stars": { level: [3, 5, 8, 12] },
+    "path-finder": { level: [3, 5, 8, 12] },
   };
 
   const LEVEL_GAMES = new Set([
@@ -21,6 +22,7 @@
     "color-pop",
     "find-odd",
     "count-stars",
+    "path-finder",
   ]);
 
   function calcStars(gameId, stats) {
@@ -151,7 +153,7 @@
         body.appendChild(msg);
         const play = document.createElement("a");
         play.className = "primary-button stats-play-btn";
-        play.href = "/index.html?game=" + encodeURIComponent(game.id);
+        play.href = "/index.html?game=" + encodeURIComponent(game.id) + "#/games/" + encodeURIComponent(game.id);
         play.textContent = "Let's Play!";
         body.appendChild(play);
       } else {
@@ -168,7 +170,7 @@
         body.appendChild(rows);
         const again = document.createElement("a");
         again.className = "secondary-button stats-play-btn";
-        again.href = "/index.html?game=" + encodeURIComponent(game.id);
+        again.href = "/index.html?game=" + encodeURIComponent(game.id) + "#/games/" + encodeURIComponent(game.id);
         again.textContent = "Play Again";
         body.appendChild(again);
       }

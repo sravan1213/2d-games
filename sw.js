@@ -1,4 +1,4 @@
-const CACHE_VERSION = "playlab-v18";
+const CACHE_VERSION = "playlab-v22";
 const CORE_ASSETS = [
   "./",
   "./index.html",
@@ -15,6 +15,7 @@ const CORE_ASSETS = [
   "./src/games/find-odd/createFindOddGame.js",
   "./src/games/shadow-match/createShadowMatchGame.js",
   "./src/games/count-stars/createCountStarsGame.js",
+  "./src/games/path-finder/createPathFinderGame.js",
   "./games/memory-match/index.html",
   "./games/shape-sprint/index.html",
   "./games/color-pop/index.html",
@@ -22,6 +23,7 @@ const CORE_ASSETS = [
   "./games/find-odd/index.html",
   "./games/shadow-match/index.html",
   "./games/count-stars/index.html",
+  "./games/path-finder/index.html",
   "./sitemap.xml",
   "./robots.txt",
   "./manifest.webmanifest",

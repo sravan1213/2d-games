@@ -14,7 +14,7 @@
   const audio = window.Playlab && window.Playlab.audio;
 
   function parseGameIdFromLocation() {
-    const pathMatch = window.location.pathname.match(/^\/games\/([^/]+)\/?$/);
+    const pathMatch = window.location.pathname.match(/^\/games\/([^/]+)(?:\/(?:index\.html)?)?\/?$/);
     if (pathMatch && pathMatch[1]) return pathMatch[1];
 
     const hash = window.location.hash || "";
@@ -107,10 +107,11 @@
     "find-odd":     { level: [3, 5, 8, 12] },
     "shadow-match": { score: [6, 14, 24, 38] },
     "count-stars":  { level: [3, 5, 8, 12] },
+    "path-finder":  { level: [3, 5, 8, 12] },
   };
 
   // Games that display level as primary metric on the dashboard
-  const LEVEL_GAMES = new Set(["memory-match", "color-pop", "find-odd", "count-stars"]);
+  const LEVEL_GAMES = new Set(["memory-match", "color-pop", "find-odd", "count-stars", "path-finder"]);
 
   function calcStars(gameId, stats) {
     if (!stats || !stats.timesPlayed) return 0;
@@ -345,6 +346,7 @@
       case "color-pop":
       case "find-odd":
       case "count-stars":
+      case "path-finder":
         return `Lv ${value}`;
       case "shape-sprint":
       case "tap-rabbit":

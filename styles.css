@@ -58,7 +58,8 @@ a,
 .game-card,
 .tile,
 .balloon,
-.shape-tile {
+.shape-tile,
+.path-tile {
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -2620,6 +2621,7 @@ body.is-playing .meta-best {
 .odd-tile,
 .rabbit-burrow,
 .balloon,
+.path-tile,
 .game-card button,
 .primary-button,
 .secondary-button {
@@ -2647,6 +2649,9 @@ body.is-playing .meta-best {
   .shape-tile.is-hint,
   .odd-tile.is-hint,
   .shadow-tile.is-hint {
+    animation: none;
+  }
+  .path-tile.is-wrong {
     animation: none;
   }
   .count-item {
@@ -3011,6 +3016,255 @@ body.is-playing .meta-best {
 .count-status.ok   { color: #1e7a3a; }
 .count-status.warn { color: #c05b1e; }
 .count-status.end  { color: #7c5cff; }
+
+/* ─── Path Finder ─────────────────────────────────────────────────── */
+
+.path-game {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 10px;
+  padding: 10px 14px;
+}
+
+.path-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 0 4px;
+  flex: 0 0 auto;
+}
+
+.path-meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.path-meta p {
+  margin: 0;
+  background: #ffffff;
+  color: #3f3473;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: 0.9rem;
+  border: 1px solid #e7dcff;
+  white-space: nowrap;
+}
+
+.path-header .secondary-button {
+  background: #ffffff;
+  color: #5f4ca8;
+  border: 1px solid #dfd4ff;
+  box-shadow: none;
+  padding: 8px 14px;
+}
+
+.path-target-card {
+  border: 1px solid #e9e0ff;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #ffffff 0%, #fbfff7 100%);
+  padding: 8px 12px;
+  text-align: center;
+  flex: 0 0 auto;
+}
+
+.path-step-label {
+  margin: 2px 0 0;
+  color: #3f3473;
+  font-weight: 800;
+  font-size: 0.9rem;
+}
+
+.path-board-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: grid;
+  place-items: center;
+  container-type: size;
+  overflow: hidden;
+  padding: 0;
+}
+
+.path-board {
+  --path-size: 4;
+  width: min(100cqw, 100cqh);
+  max-height: 100%;
+  max-width: 100%;
+  aspect-ratio: 1;
+  display: grid;
+  grid-template-columns: repeat(var(--path-size), 1fr);
+  grid-template-rows: repeat(var(--path-size), 1fr);
+  gap: clamp(6px, 1.5cqmin, 10px);
+  container-type: size;
+  padding: clamp(8px, 2cqmin, 14px);
+  border-radius: 24px;
+  border: 2px solid #dff4dc;
+  background:
+    radial-gradient(circle at 20% 18%, rgba(255, 255, 255, 0.9), transparent 28%),
+    linear-gradient(160deg, #eafbe4 0%, #f8fff3 48%, #fff1d9 100%);
+  box-shadow: inset 0 -10px 20px rgba(106, 150, 72, 0.08);
+}
+
+.path-tile {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  border: 2px solid #d8edcf;
+  border-radius: 16px;
+  background:
+    radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.85), transparent 45%),
+    linear-gradient(180deg, #ffffff 0%, #effbe9 100%);
+  cursor: pointer;
+  font-size: clamp(1.4rem, 8cqmin, 3rem);
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  container-type: size;
+  transition: transform 120ms ease, border-color 120ms ease, background 120ms ease, box-shadow 120ms ease;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (hover: hover) {
+  .path-tile:not(:disabled):hover {
+    transform: translateY(-2px);
+    border-color: #bfe5b5;
+  }
+}
+
+.path-tile:disabled {
+  cursor: default;
+}
+
+.path-tile.is-blocked {
+  background:
+    radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.32), transparent 40%),
+    linear-gradient(180deg, #d8edd0 0%, #9cc98c 100%);
+  border-color: #89bd75;
+  box-shadow: inset 0 -5px 0 rgba(70, 125, 58, 0.16);
+}
+
+.path-tile.is-visited {
+  background:
+    radial-gradient(circle at 35% 28%, rgba(255, 255, 255, 0.55), transparent 42%),
+    linear-gradient(180deg, #fff7dc 0%, #ffe7a6 100%);
+  border-color: #f0c467;
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.52);
+}
+
+.path-tile.is-current {
+  background: linear-gradient(180deg, #ffffff 0%, #eafff1 100%);
+  border-color: #64cf82;
+  box-shadow: 0 0 0 3px rgba(74, 209, 138, 0.28);
+  z-index: 2;
+}
+
+.path-tile.is-goal {
+  background: linear-gradient(180deg, #ffffff 0%, #fff2dc 100%);
+  border-color: #ffb54c;
+  box-shadow: 0 0 0 3px rgba(255, 181, 76, 0.2);
+}
+
+.path-tile.is-wrong {
+  background: #fff2f6;
+  border-color: #f4a8c6;
+  animation: path-wrong-shake 260ms ease;
+}
+
+.path-tile.is-hint {
+  box-shadow: 0 0 0 4px rgba(255, 181, 76, 0.45), 0 8px 22px rgba(255, 181, 76, 0.25);
+}
+
+@keyframes path-wrong-shake {
+  0%, 100% { transform: translateX(0); }
+  30% { transform: translateX(-4px); }
+  65% { transform: translateX(4px); }
+}
+
+.path-timer-track {
+  height: 8px;
+  border-radius: 999px;
+  background: #eee7ff;
+  overflow: hidden;
+  flex: 0 0 8px;
+  width: 100%;
+}
+
+.path-timer-fill {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, #4ad18a 0%, #ffb54c 55%, #ff6fb5 100%);
+  transition: width 60ms linear;
+}
+
+.path-status {
+  margin: 0;
+  min-height: 20px;
+  line-height: 1.25;
+  text-align: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  flex: 0 0 auto;
+}
+
+.path-status.ok   { color: #1e7a3a; }
+.path-status.warn { color: #c05b1e; }
+.path-status.end  { color: #7c5cff; }
+
+@media (max-width: 760px) {
+  body.is-playing .path-game {
+    gap: 8px;
+    padding: 0;
+  }
+
+  body.is-playing .path-header {
+    gap: 8px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  body.is-playing .path-meta {
+    gap: 6px;
+    justify-content: center;
+  }
+
+  body.is-playing .path-meta p {
+    font-size: 0.76rem;
+  }
+
+  body.is-playing .path-header .secondary-button {
+    font-size: 0.78rem;
+    padding: 7px 10px;
+  }
+
+  body.is-playing .path-target-card {
+    padding: 6px 10px;
+  }
+
+  body.is-playing .path-step-label {
+    font-size: 0.78rem;
+    line-height: 1.2;
+  }
+
+  body.is-playing .path-status {
+    font-size: 0.82rem;
+    min-height: 18px;
+  }
+}
+
+@media (max-height: 520px) {
+  body.is-playing .path-status {
+    display: none;
+  }
+
+  body.is-playing .path-target-card {
+    padding: 6px 10px;
+  }
+}
 
 /* ═══════════════════════════════════════════════════════════════════
    TROPHY ROOM – Stats Dashboard
