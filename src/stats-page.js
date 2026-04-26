@@ -151,7 +151,7 @@
         body.appendChild(msg);
         const play = document.createElement("a");
         play.className = "primary-button stats-play-btn";
-        play.href = "./index.html";
+        play.href = "/index.html?game=" + encodeURIComponent(game.id);
         play.textContent = "Let's Play!";
         body.appendChild(play);
       } else {
@@ -168,7 +168,7 @@
         body.appendChild(rows);
         const again = document.createElement("a");
         again.className = "secondary-button stats-play-btn";
-        again.href = "./index.html";
+        again.href = "/index.html?game=" + encodeURIComponent(game.id);
         again.textContent = "Play Again";
         body.appendChild(again);
       }

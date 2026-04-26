@@ -295,6 +295,7 @@
     function disableChoices() {
       choicesEl.querySelectorAll(".count-choice-btn").forEach((btn) => {
         btn.disabled = true;
+        btn.blur();
       });
     }
 

@@ -2948,15 +2948,22 @@ body.is-playing .meta-best {
   box-shadow: 0 3px 10px rgba(68, 48, 140, 0.08);
 }
 
-.count-choice-btn:hover {
-  background: #f7f4ff;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(68, 48, 140, 0.14);
+@media (hover: hover) {
+  .count-choice-btn:hover {
+    background: #f7f4ff;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(68, 48, 140, 0.14);
+  }
 }
 
 .count-choice-btn:active {
   transform: scale(0.96);
   box-shadow: 0 2px 6px rgba(68, 48, 140, 0.1);
+}
+
+.count-choice-btn:focus-visible {
+  outline: 3px solid #bca9ff;
+  outline-offset: 2px;
 }
 
 .count-choice-btn.is-correct {
