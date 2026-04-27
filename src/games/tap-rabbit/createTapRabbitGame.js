@@ -42,7 +42,7 @@
             <p id="rabbit-level-label">Level: 1</p>
             <p id="rabbit-best-label" class="meta-best hidden">Best: --</p>
           </div>
-          <button id="rabbit-restart-button" class="secondary-button game-restart-button" type="button" aria-label="Restart game">↻ Restart</button>
+          <button id="rabbit-restart-button" class="secondary-button game-restart-button" type="button" aria-label="Restart game">🔄 Restart</button>
         </header>
 
         <div class="rabbit-target-card">
@@ -245,7 +245,7 @@
           <div class="game-over-card">
             <h3>Game over</h3>
             <p>You scored <strong>${score}</strong> points.</p>
-            <button id="rabbit-overlay-restart" class="primary-button game-over-restart" type="button">↻ Restart</button>
+            <button id="rabbit-overlay-restart" class="primary-button game-over-restart" type="button">🔄 Play Again</button>
           </div>
         `;
         overlay.classList.remove("hidden");

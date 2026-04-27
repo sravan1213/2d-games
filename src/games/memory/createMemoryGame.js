@@ -101,7 +101,7 @@
             <p id="memory-moves-label">Moves: 0</p>
             <p id="memory-best-label" class="meta-best hidden">Best: --</p>
           </div>
-          <button id="memory-restart-button" class="secondary-button game-restart-button" type="button" aria-label="Restart game">↻ Restart</button>
+          <button id="memory-restart-button" class="secondary-button game-restart-button" type="button" aria-label="Restart game">🔄 Restart</button>
         </header>
         <div class="memory-board-wrap">
           <div id="memory-board" class="game-board" aria-live="polite"></div>

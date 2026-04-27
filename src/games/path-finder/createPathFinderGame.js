@@ -190,7 +190,7 @@
             <p id="path-lives-label">Lives: ❤❤❤</p>
             <p id="path-best-label" class="meta-best hidden">Best: --</p>
           </div>
-          <button id="path-restart-button" class="secondary-button game-restart-button" type="button" aria-label="Restart game">↻ Restart</button>
+          <button id="path-restart-button" class="secondary-button game-restart-button" type="button" aria-label="Restart game">🔄 Restart</button>
         </header>
 
         <div class="path-target-card">
@@ -486,7 +486,7 @@
           <div class="game-over-card">
             <h3>Game over</h3>
             <p>You reached <strong>Level ${level}</strong> with score <strong>${score}</strong>.</p>
-            <button id="path-overlay-restart" class="primary-button game-over-restart" type="button">↻ Restart</button>
+            <button id="path-overlay-restart" class="primary-button game-over-restart" type="button">🔄 Play Again</button>
           </div>
         `;
         overlay.classList.remove("hidden");

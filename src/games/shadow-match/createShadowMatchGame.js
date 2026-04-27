@@ -147,7 +147,7 @@
             <p id="shadow-lives-label">Lives: ❤❤❤</p>
             <p id="shadow-best-label" class="meta-best hidden">Best: --</p>
           </div>
-          <button id="shadow-restart-button" class="secondary-button game-restart-button" type="button" aria-label="Restart game">↻ Restart</button>
+          <button id="shadow-restart-button" class="secondary-button game-restart-button" type="button" aria-label="Restart game">🔄 Restart</button>
         </header>
 
         <div class="shadow-target-card">
@@ -379,7 +379,7 @@
           <div class="game-over-card">
             <h3>Game over</h3>
             <p>Your final score is <strong>${score}</strong>.</p>
-            <button id="shadow-overlay-restart" class="primary-button game-over-restart" type="button">↻ Restart</button>
+            <button id="shadow-overlay-restart" class="primary-button game-over-restart" type="button">🔄 Play Again</button>
           </div>
         `;
         overlay.classList.remove("hidden");

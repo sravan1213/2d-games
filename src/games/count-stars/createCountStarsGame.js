@@ -117,7 +117,7 @@
             <p id="count-level-label">Level: 1</p>
             <p id="count-best-label" class="meta-best hidden">Best: --</p>
           </div>
-          <button id="count-restart-button" class="secondary-button game-restart-button" type="button" aria-label="Restart game">↻ Restart</button>
+          <button id="count-restart-button" class="secondary-button game-restart-button" type="button" aria-label="Restart game">🔄 Restart</button>
         </header>
 
         <div class="count-target-card">
@@ -374,7 +374,7 @@
           <div class="game-over-card">
             <h3>Game over</h3>
             <p>You reached <strong>Level ${level}</strong> with score <strong>${score}</strong>.</p>
-            <button id="count-overlay-restart" class="primary-button game-over-restart" type="button">↻ Restart</button>
+            <button id="count-overlay-restart" class="primary-button game-over-restart" type="button">🔄 Play Again</button>
           </div>
         `;
         overlay.classList.remove("hidden");

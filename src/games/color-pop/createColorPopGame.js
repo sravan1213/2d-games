@@ -124,7 +124,7 @@
             <p id="color-level-label">Level: 1</p>
             <p id="color-best-label" class="meta-best hidden">Best: --</p>
           </div>
-          <button id="color-restart-button" class="secondary-button game-restart-button" type="button" aria-label="Restart game">↻ Restart</button>
+          <button id="color-restart-button" class="secondary-button game-restart-button" type="button" aria-label="Restart game">🔄 Restart</button>
         </header>
 
         <div class="color-target-card">
@@ -527,7 +527,7 @@
           <h3>Game over</h3>
           <p>You reached <strong>Level ${level}</strong> and popped <strong>${score}</strong> balloons.</p>
           ${bestNote}
-          <button id="color-overlay-restart" class="primary-button game-over-restart" type="button">↻ Restart</button>
+          <button id="color-overlay-restart" class="primary-button game-over-restart" type="button">🔄 Play Again</button>
         </div>
       `;
       overlay.classList.remove("hidden");

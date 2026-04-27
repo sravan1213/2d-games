@@ -43,7 +43,7 @@
             <p id="fill-combo-label" class="fill-combo hidden" aria-live="polite">Combo ×1</p>
             <p id="fill-best-label" class="meta-best hidden" aria-label="Best score">🏆 --</p>
           </div>
-          <button id="fill-restart-button" class="secondary-button fill-restart-button" type="button" aria-label="Restart game">↻ Restart</button>
+          <button id="fill-restart-button" class="secondary-button fill-restart-button" type="button" aria-label="Restart game">🔄 Restart</button>
         </header>
 
         <div class="fill-drink-target-card">
@@ -563,7 +563,7 @@
           <div class="fill-overlay-card">
             <h3>Game over</h3>
             <p>You scored <strong>${score}</strong> points.</p>
-            <button id="fill-overlay-restart" class="primary-button fill-overlay-restart" type="button">↻ Restart</button>
+            <button id="fill-overlay-restart" class="primary-button fill-overlay-restart" type="button">🔄 Play Again</button>
           </div>
         `;
         overlay.classList.remove("hidden");

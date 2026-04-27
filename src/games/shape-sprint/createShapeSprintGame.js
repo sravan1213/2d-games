@@ -334,7 +334,7 @@
           </div>
           <div class="shape-sprint-actions">
             <button id="shape-speech-toggle" class="secondary-button" type="button">Speech: On</button>
-            <button id="shape-restart-button" class="secondary-button game-restart-button" type="button" aria-label="Restart game">↻ Restart</button>
+            <button id="shape-restart-button" class="secondary-button game-restart-button" type="button" aria-label="Restart game">🔄 Restart</button>
           </div>
         </header>
 
@@ -594,7 +594,7 @@
           <div class="game-over-card">
             <h3>Game over</h3>
             <p>Your final score is <strong>${score}</strong>.</p>
-            <button id="shape-overlay-restart" class="primary-button game-over-restart" type="button">↻ Restart</button>
+            <button id="shape-overlay-restart" class="primary-button game-over-restart" type="button">🔄 Play Again</button>
           </div>
         `;
         overlay.classList.remove("hidden");
