@@ -147,7 +147,7 @@
             <p id="shadow-lives-label">Lives: ❤❤❤</p>
             <p id="shadow-best-label" class="meta-best hidden">Best: --</p>
           </div>
-          <button id="shadow-restart-button" class="secondary-button" type="button">Restart</button>
+          <button id="shadow-restart-button" class="secondary-button game-restart-button" type="button" aria-label="Restart game">↻ Restart</button>
         </header>
 
         <div class="shadow-target-card">
@@ -157,6 +157,7 @@
 
         <div class="shadow-board-wrap">
           <div id="shadow-board" class="shadow-board" aria-live="polite"></div>
+          <div id="shadow-overlay" class="game-over-overlay hidden" aria-live="polite"></div>
         </div>
 
         <div class="shadow-timer-track" aria-hidden="true">
@@ -171,6 +172,7 @@
     const bestLabel = container.querySelector("#shadow-best-label");
     const targetPreview = container.querySelector("#shadow-target-preview");
     const board = container.querySelector("#shadow-board");
+    const overlay = container.querySelector("#shadow-overlay");
     const timerFill = container.querySelector("#shadow-timer-fill");
     const statusMessage = container.querySelector("#shadow-status-message");
     const restartButton = container.querySelector("#shadow-restart-button");
@@ -372,6 +374,25 @@
         paintBestLabel();
       }
 
+      if (overlay) {
+        overlay.innerHTML = `
+          <div class="game-over-card">
+            <h3>Game over</h3>
+            <p>Your final score is <strong>${score}</strong>.</p>
+            <button id="shadow-overlay-restart" class="primary-button game-over-restart" type="button">↻ Restart</button>
+          </div>
+        `;
+        overlay.classList.remove("hidden");
+        const overlayRestart = overlay.querySelector("#shadow-overlay-restart");
+        if (overlayRestart) {
+          overlayRestart.addEventListener("click", () => {
+            const fx = audio();
+            if (fx) fx.play("click");
+            restartButton.click();
+          });
+        }
+      }
+
       setStatus(
         `Game over! Final score: ${score}.${bestSuffix} Tap restart to play again.`,
         "end",
@@ -413,6 +434,10 @@
       paintMeta();
       paintBestLabel();
       setStatus("Ready... match the shadow!", null);
+      if (overlay) {
+        overlay.classList.add("hidden");
+        overlay.innerHTML = "";
+      }
       if (sfx) sfx.play("levelStart");
       renderRound();
     });

@@ -37,18 +37,16 @@
       <section class="fill-drink-game">
         <header class="fill-drink-header">
           <div class="fill-drink-meta">
-            <p id="fill-score-label">Score: 0</p>
-            <p id="fill-lives-label">Lives: ${hearts(START_LIVES)}</p>
-            <p id="fill-level-label">Level: 1</p>
+            <p id="fill-score-label" aria-label="Score">⭐ 0</p>
+            <p id="fill-lives-label" aria-label="Lives">${hearts(START_LIVES)}</p>
+            <p id="fill-progress-label" aria-label="Level progress">L1 · 0/${WAVE_GOAL}</p>
             <p id="fill-combo-label" class="fill-combo hidden" aria-live="polite">Combo ×1</p>
-            <p id="fill-perfects-label" class="fill-perfects">Next level: 0 / ${WAVE_GOAL}</p>
-            <p id="fill-best-label" class="meta-best hidden">Best: --</p>
+            <p id="fill-best-label" class="meta-best hidden" aria-label="Best score">🏆 --</p>
           </div>
-          <button id="fill-restart-button" class="secondary-button" type="button">Restart</button>
+          <button id="fill-restart-button" class="secondary-button fill-restart-button" type="button" aria-label="Restart game">↻ Restart</button>
         </header>
 
         <div class="fill-drink-target-card">
-          <p class="target-hint">Busy soda rush! Fill each cone glass from the vending station and stop in the <span class="fill-green-mark">green</span> band.</p>
           <div class="fill-drink-target-preview">
             <span class="symbol" aria-hidden="true">🥤</span>
             <span id="fill-order-name" class="name">Fill the Drink</span>
@@ -83,6 +81,7 @@
             <div id="fill-floor-spill" class="fill-floor-spill hidden" aria-hidden="true"></div>
 
             <div id="fill-spill-fx" class="fill-spill-fx hidden" aria-hidden="true"></div>
+            <div id="fill-overlay" class="fill-overlay hidden" aria-live="polite"></div>
           </div>
         </div>
 
@@ -98,9 +97,8 @@
 
     const scoreLabel = container.querySelector("#fill-score-label");
     const livesLabel = container.querySelector("#fill-lives-label");
-    const levelLabel = container.querySelector("#fill-level-label");
+    const progressLabel = container.querySelector("#fill-progress-label");
     const comboLabel = container.querySelector("#fill-combo-label");
-    const perfectsLabel = container.querySelector("#fill-perfects-label");
     const bestLabel = container.querySelector("#fill-best-label");
     const cupEl = container.querySelector("#fill-cup");
     const liquidEl = container.querySelector("#fill-liquid");
@@ -115,6 +113,7 @@
     const pourButton = container.querySelector("#fill-pour-button");
     const statusMessage = container.querySelector("#fill-status-message");
     const restartButton = container.querySelector("#fill-restart-button");
+    const overlay = container.querySelector("#fill-overlay");
     const orderNameEl = container.querySelector("#fill-order-name");
 
     const storage = () => window.Playlab && window.Playlab.storage;
@@ -137,18 +136,18 @@
 
     let rafId = null;
     let lastTick = 0;
+    let nextFizzAt = 0;
     let spillTriggered = false;
     let settling = false;
     let pourSoundTimer = null;
 
     function paintMeta() {
-      scoreLabel.textContent = `Score: ${score}`;
-      livesLabel.textContent = `Lives: ${hearts(lives)}`;
-      levelLabel.textContent = `Level: ${level}`;
-      perfectsLabel.textContent = `Next level: ${perfectsThisLevel} / ${WAVE_GOAL}`;
+      scoreLabel.textContent = `⭐ ${score}`;
+      livesLabel.textContent = hearts(lives);
+      progressLabel.textContent = `L${level} · ${perfectsThisLevel}/${WAVE_GOAL}`;
 
       if (streak >= 2) {
-        comboLabel.textContent = `Combo ×${streak}`;
+        comboLabel.textContent = `🔥 ×${streak}`;
         comboLabel.classList.remove("hidden");
       } else {
         comboLabel.classList.add("hidden");
@@ -162,7 +161,7 @@
       if (best == null) {
         bestLabel.classList.add("hidden");
       } else {
-        bestLabel.textContent = `Best: ${best}`;
+        bestLabel.textContent = `🏆 ${best}`;
         bestLabel.classList.remove("hidden");
       }
     }
@@ -221,7 +220,31 @@
       });
     }
 
-    function paintLiquid() {
+    function maybeSpawnFizz(nowMs = performance.now()) {
+      if (!pouring || fill <= 0.04 || fill >= 1.02) return;
+      if (nowMs < nextFizzAt) return;
+
+      const burstCount = 1 + Math.floor(Math.random() * 3);
+      for (let i = 0; i < burstCount; i += 1) {
+        const fizz = document.createElement("div");
+        const size = 5 + Math.random() * 7;
+        const duration = 0.65 + Math.random() * 0.85;
+        const rise = 80 + Math.random() * 90;
+        fizz.className = "fizz-bubble";
+        fizz.style.left = `${6 + Math.random() * 88}%`;
+        fizz.style.width = `${size}px`;
+        fizz.style.height = `${size}px`;
+        fizz.style.opacity = `${0.45 + Math.random() * 0.45}`;
+        fizz.style.setProperty("--fizz-duration", `${duration}s`);
+        fizz.style.setProperty("--fizz-rise", `${rise}px`);
+        liquidEl.appendChild(fizz);
+        setTimeout(() => fizz.remove(), Math.ceil((duration + 0.15) * 1000));
+      }
+
+      nextFizzAt = nowMs + (55 + Math.random() * 240);
+    }
+
+    function paintLiquid(nowMs = performance.now()) {
       const pct = Math.min(1.15, fill) * 100;
       liquidEl.style.setProperty("--fill-pct", `${pct}%`);
       if (cupStage) cupStage.style.setProperty("--fill-pct", String(pct));
@@ -235,14 +258,7 @@
       cupEl.classList.toggle("is-danger", pouring && fill > 0.96);
 
       if (streamSplash) streamSplash.style.display = pouring && fill > 0.05 && fill < 0.9 ? "block" : "none";
-
-      if (pouring && fill > 0 && Math.random() > 0.6) {
-        const fizz = document.createElement("div");
-        fizz.className = "fizz-bubble";
-        fizz.style.left = `${Math.random() * 100}%`;
-        liquidEl.appendChild(fizz);
-        setTimeout(() => fizz.remove(), 1000);
-      }
+      maybeSpawnFizz(nowMs);
     }
 
     function paintZoneBand() {
@@ -329,6 +345,7 @@
       if (rafId != null || ended) return;
       spillTriggered = false;
       lastTick = 0;
+      nextFizzAt = 0;
       rafId = requestAnimationFrame(pourTick);
     }
 
@@ -541,6 +558,25 @@
         paintBestLabel();
       }
 
+      if (overlay) {
+        overlay.innerHTML = `
+          <div class="fill-overlay-card">
+            <h3>Game over</h3>
+            <p>You scored <strong>${score}</strong> points.</p>
+            <button id="fill-overlay-restart" class="primary-button fill-overlay-restart" type="button">↻ Restart</button>
+          </div>
+        `;
+        overlay.classList.remove("hidden");
+        const overlayRestart = overlay.querySelector("#fill-overlay-restart");
+        if (overlayRestart) {
+          overlayRestart.addEventListener("click", () => {
+            const fx = audio();
+            if (fx) fx.play("click");
+            startGame();
+          });
+        }
+      }
+
       setStatus(`Game over! You scored ${score} points.${bestSuffix} Press restart for another round.`, "end");
       const a = audio();
       if (a) a.play("win");
@@ -555,8 +591,13 @@
       perfectsThisLevel = 0;
       ended = false;
       pouring = false;
+      nextFizzAt = 0;
       orderQueue = [createOrder(), createOrder(), createOrder()];
       if (doneRail) doneRail.innerHTML = "";
+      if (overlay) {
+        overlay.classList.add("hidden");
+        overlay.innerHTML = "";
+      }
       pourButton.disabled = false;
       cupEl.classList.remove("is-pouring");
       if (pourStream) pourStream.classList.add("hidden");

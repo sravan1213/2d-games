@@ -42,7 +42,7 @@
             <p id="rabbit-level-label">Level: 1</p>
             <p id="rabbit-best-label" class="meta-best hidden">Best: --</p>
           </div>
-          <button id="rabbit-restart-button" class="secondary-button" type="button">Restart</button>
+          <button id="rabbit-restart-button" class="secondary-button game-restart-button" type="button" aria-label="Restart game">↻ Restart</button>
         </header>
 
         <div class="rabbit-target-card">
@@ -62,6 +62,7 @@
             <span class="rabbit-decor decor-flower-b" aria-hidden="true">🌸</span>
             <span class="rabbit-decor decor-bush" aria-hidden="true">🌳</span>
             <div id="rabbit-burrows" class="rabbit-burrows"></div>
+            <div id="rabbit-overlay" class="game-over-overlay hidden" aria-live="polite"></div>
           </div>
         </div>
         <p id="rabbit-status-message" class="rabbit-status"></p>
@@ -73,6 +74,7 @@
     const levelLabel = container.querySelector("#rabbit-level-label");
     const bestLabel = container.querySelector("#rabbit-best-label");
     const burrowsEl = container.querySelector("#rabbit-burrows");
+    const overlay = container.querySelector("#rabbit-overlay");
     const statusMessage = container.querySelector("#rabbit-status-message");
     const restartButton = container.querySelector("#rabbit-restart-button");
 
@@ -238,6 +240,25 @@
         paintBestLabel();
       }
 
+      if (overlay) {
+        overlay.innerHTML = `
+          <div class="game-over-card">
+            <h3>Game over</h3>
+            <p>You scored <strong>${score}</strong> points.</p>
+            <button id="rabbit-overlay-restart" class="primary-button game-over-restart" type="button">↻ Restart</button>
+          </div>
+        `;
+        overlay.classList.remove("hidden");
+        const overlayRestart = overlay.querySelector("#rabbit-overlay-restart");
+        if (overlayRestart) {
+          overlayRestart.addEventListener("click", () => {
+            const fx = audio();
+            if (fx) fx.play("click");
+            startGame();
+          });
+        }
+      }
+
       setStatus(`Game over! You scored ${score} points.${bestSuffix} Press restart for another round.`, "end");
       const a = audio();
       if (a) a.play("win");
@@ -308,6 +329,10 @@
 
     function startGame() {
       clearTimers();
+      if (overlay) {
+        overlay.classList.add("hidden");
+        overlay.innerHTML = "";
+      }
       score = 0;
       lives = START_LIVES;
       level = 1;

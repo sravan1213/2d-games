@@ -117,7 +117,7 @@
             <p id="count-level-label">Level: 1</p>
             <p id="count-best-label" class="meta-best hidden">Best: --</p>
           </div>
-          <button id="count-restart-button" class="secondary-button" type="button">Restart</button>
+          <button id="count-restart-button" class="secondary-button game-restart-button" type="button" aria-label="Restart game">↻ Restart</button>
         </header>
 
         <div class="count-target-card">
@@ -125,7 +125,9 @@
         </div>
 
         <div class="count-board-wrap">
-          <div id="count-play-area" class="count-play-area" aria-hidden="true"></div>
+          <div id="count-play-area" class="count-play-area" aria-hidden="true">
+            <div id="count-overlay" class="game-over-overlay hidden" aria-live="polite"></div>
+          </div>
         </div>
 
         <div id="count-choices" class="count-choices" role="group" aria-label="Your answer"></div>
@@ -143,6 +145,7 @@
     const bestLabel = container.querySelector("#count-best-label");
     const hintLabel = container.querySelector("#count-hint-label");
     const playArea = container.querySelector("#count-play-area");
+    const overlay = container.querySelector("#count-overlay");
     const choicesEl = container.querySelector("#count-choices");
     const timerFill = container.querySelector("#count-timer-fill");
     const statusMessage = container.querySelector("#count-status-message");
@@ -366,6 +369,25 @@
         paintBestLabel();
       }
 
+      if (overlay) {
+        overlay.innerHTML = `
+          <div class="game-over-card">
+            <h3>Game over</h3>
+            <p>You reached <strong>Level ${level}</strong> with score <strong>${score}</strong>.</p>
+            <button id="count-overlay-restart" class="primary-button game-over-restart" type="button">↻ Restart</button>
+          </div>
+        `;
+        overlay.classList.remove("hidden");
+        const overlayRestart = overlay.querySelector("#count-overlay-restart");
+        if (overlayRestart) {
+          overlayRestart.addEventListener("click", () => {
+            const fx = audio();
+            if (fx) fx.play("click");
+            start();
+          });
+        }
+      }
+
       setStatus(
         `Game over! You reached level ${level} with score ${score}.${bestSuffix}`,
         "end",
@@ -376,6 +398,10 @@
 
     function start() {
       clearTimers();
+      if (overlay) {
+        overlay.classList.add("hidden");
+        overlay.innerHTML = "";
+      }
       level = 1;
       score = 0;
       lives = START_LIVES;

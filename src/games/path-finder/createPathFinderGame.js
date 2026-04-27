@@ -190,7 +190,7 @@
             <p id="path-lives-label">Lives: ❤❤❤</p>
             <p id="path-best-label" class="meta-best hidden">Best: --</p>
           </div>
-          <button id="path-restart-button" class="secondary-button" type="button">Restart</button>
+          <button id="path-restart-button" class="secondary-button game-restart-button" type="button" aria-label="Restart game">↻ Restart</button>
         </header>
 
         <div class="path-target-card">
@@ -200,6 +200,7 @@
 
         <div class="path-board-wrap">
           <div id="path-board" class="path-board" aria-label="Path Finder maze"></div>
+          <div id="path-overlay" class="game-over-overlay hidden" aria-live="polite"></div>
         </div>
 
         <div class="path-timer-track" aria-hidden="true">
@@ -216,6 +217,7 @@
     const targetHint = container.querySelector(".target-hint");
     const stepLabel = container.querySelector("#path-step-label");
     const board = container.querySelector("#path-board");
+    const overlay = container.querySelector("#path-overlay");
     const timerFill = container.querySelector("#path-timer-fill");
     const statusMessage = container.querySelector("#path-status-message");
     const restartButton = container.querySelector("#path-restart-button");
@@ -479,6 +481,25 @@
         paintBestLabel();
       }
 
+      if (overlay) {
+        overlay.innerHTML = `
+          <div class="game-over-card">
+            <h3>Game over</h3>
+            <p>You reached <strong>Level ${level}</strong> with score <strong>${score}</strong>.</p>
+            <button id="path-overlay-restart" class="primary-button game-over-restart" type="button">↻ Restart</button>
+          </div>
+        `;
+        overlay.classList.remove("hidden");
+        const overlayRestart = overlay.querySelector("#path-overlay-restart");
+        if (overlayRestart) {
+          overlayRestart.addEventListener("click", () => {
+            const fx = audio();
+            if (fx) fx.play("click");
+            start();
+          });
+        }
+      }
+
       setStatus(`Game over! You reached level ${level} with score ${score}.${bestSuffix}`, "end");
       const a = audio();
       if (a) a.play("win");
@@ -486,6 +507,10 @@
 
     function start() {
       clearTimers();
+      if (overlay) {
+        overlay.classList.add("hidden");
+        overlay.innerHTML = "";
+      }
       level = 1;
       score = 0;
       lives = START_LIVES;

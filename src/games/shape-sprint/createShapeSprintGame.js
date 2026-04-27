@@ -334,7 +334,7 @@
           </div>
           <div class="shape-sprint-actions">
             <button id="shape-speech-toggle" class="secondary-button" type="button">Speech: On</button>
-            <button id="shape-restart-button" class="secondary-button" type="button">Restart</button>
+            <button id="shape-restart-button" class="secondary-button game-restart-button" type="button" aria-label="Restart game">↻ Restart</button>
           </div>
         </header>
 
@@ -345,6 +345,7 @@
 
         <div class="shape-board-wrap">
           <div id="shape-board" class="shape-board" aria-live="polite"></div>
+          <div id="shape-overlay" class="game-over-overlay hidden" aria-live="polite"></div>
         </div>
 
         <div class="shape-timer-track" aria-hidden="true">
@@ -361,6 +362,7 @@
     const targetHint = container.querySelector("#shape-target-hint");
     const targetPreview = container.querySelector("#shape-target-preview");
     const board = container.querySelector("#shape-board");
+    const overlay = container.querySelector("#shape-overlay");
     const timerFill = container.querySelector("#shape-timer-fill");
     const statusMessage = container.querySelector("#shape-status-message");
     const restartButton = container.querySelector("#shape-restart-button");
@@ -587,6 +589,25 @@
         paintBestLabel();
       }
 
+      if (overlay) {
+        overlay.innerHTML = `
+          <div class="game-over-card">
+            <h3>Game over</h3>
+            <p>Your final score is <strong>${score}</strong>.</p>
+            <button id="shape-overlay-restart" class="primary-button game-over-restart" type="button">↻ Restart</button>
+          </div>
+        `;
+        overlay.classList.remove("hidden");
+        const overlayRestart = overlay.querySelector("#shape-overlay-restart");
+        if (overlayRestart) {
+          overlayRestart.addEventListener("click", () => {
+            const fx = audio();
+            if (fx) fx.play("click");
+            startGame();
+          });
+        }
+      }
+
       setStatus(
         `Game over! Final score: ${score}.${bestSuffix} Tap restart to play again.`,
         "end",
@@ -598,6 +619,10 @@
 
     function startGame() {
       clearTimers();
+      if (overlay) {
+        overlay.classList.add("hidden");
+        overlay.innerHTML = "";
+      }
       score = 0;
       lives = 3;
       round = 1;
