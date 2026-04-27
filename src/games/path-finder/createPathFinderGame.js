@@ -57,12 +57,57 @@
     return 0.16;
   }
 
+  function getMazeDifficulty(level) {
+    if (level >= 9) {
+      return {
+        attemptCount: 48,
+        minExtraDistance: 4,
+        targetExtraDistance: 6,
+        obviousBlockerLimit: Number.POSITIVE_INFINITY,
+        openCellRatio: 0.44,
+        crowdPath: true,
+      };
+    }
+    if (level >= 6) {
+      return {
+        attemptCount: 40,
+        minExtraDistance: 3,
+        targetExtraDistance: 4,
+        obviousBlockerLimit: 4,
+        openCellRatio: 0.48,
+        crowdPath: true,
+      };
+    }
+    if (level >= 3) {
+      return {
+        attemptCount: 32,
+        minExtraDistance: 2,
+        targetExtraDistance: 3,
+        obviousBlockerLimit: 2,
+        openCellRatio: 0.52,
+        crowdPath: false,
+      };
+    }
+    return {
+      attemptCount: 24,
+      minExtraDistance: 1,
+      targetExtraDistance: 1,
+      obviousBlockerLimit: 1,
+      openCellRatio: 0.58,
+      crowdPath: false,
+    };
+  }
+
   function keyOf(cell) {
     return `${cell.r},${cell.c}`;
   }
 
   function sameCell(a, b) {
     return a && b && a.r === b.r && a.c === b.c;
+  }
+
+  function manhattanDistance(a, b) {
+    return Math.abs(a.r - b.r) + Math.abs(a.c - b.c);
   }
 
   function isAdjacent(a, b) {
@@ -163,24 +208,89 @@
     return path;
   }
 
-  function buildSafePath(size, start, goal) {
-    const direct = findRandomPath(size, start, goal);
-    const straight = start.r === goal.r || start.c === goal.c;
-    if (!straight || size <= 4) return direct;
-
-    const pivots = shuffle([
-      { r: start.r, c: goal.c },
-      { r: goal.r, c: start.c },
-    ]).filter((p) => !sameCell(p, start) && !sameCell(p, goal));
-
-    for (const pivot of pivots) {
-      const legA = buildManhattanPath(start, pivot, Math.random() > 0.5);
-      const legB = buildManhattanPath(pivot, goal, Math.random() > 0.5).slice(1);
-      const bent = [...legA, ...legB];
-      if (bent.length >= direct.length + 1) return bent;
+  function buildPathThrough(points) {
+    const path = [];
+    for (let i = 0; i < points.length - 1; i += 1) {
+      const leg = buildManhattanPath(points[i], points[i + 1], Math.random() > 0.5);
+      path.push(...(i === 0 ? leg : leg.slice(1)));
     }
+    return path;
+  }
 
-    return direct;
+  function countPathTurns(path) {
+    let turns = 0;
+    let lastDir = null;
+    for (let i = 1; i < path.length; i += 1) {
+      const dir = {
+        dr: Math.sign(path[i].r - path[i - 1].r),
+        dc: Math.sign(path[i].c - path[i - 1].c),
+      };
+      if (lastDir && (dir.dr !== lastDir.dr || dir.dc !== lastDir.dc)) turns += 1;
+      lastDir = dir;
+    }
+    return turns;
+  }
+
+  function buildSafePath(size, start, goal, difficulty) {
+    const direct = findRandomPath(size, start, goal);
+    const directDistance = manhattanDistance(start, goal);
+    const targetLength = directDistance + difficulty.targetExtraDistance;
+    const candidates = [];
+
+    const detourRows = shuffle(
+      Array.from({ length: size }, (_, r) => r).filter((r) => r !== start.r && r !== goal.r),
+    );
+    const detourCols = shuffle(
+      Array.from({ length: size }, (_, c) => c).filter((c) => c !== start.c && c !== goal.c),
+    );
+
+    detourRows.forEach((row) => {
+      candidates.push(buildPathThrough([
+        start,
+        { r: row, c: start.c },
+        { r: row, c: goal.c },
+        goal,
+      ]));
+    });
+
+    detourCols.forEach((col) => {
+      candidates.push(buildPathThrough([
+        start,
+        { r: start.r, c: col },
+        { r: goal.r, c: col },
+        goal,
+      ]));
+    });
+
+    const bent = shuffle(candidates)
+      .filter((path) => countPathTurns(path) >= 2)
+      .sort((a, b) => {
+        const aLength = a.length - 1;
+        const bLength = b.length - 1;
+        return Math.abs(aLength - targetLength) - Math.abs(bLength - targetLength)
+          || countPathTurns(b) - countPathTurns(a);
+      });
+
+    return bent[0] || direct;
+  }
+
+  function getObviousRouteBlockers(start, goal, safeKeys) {
+    const blockerKeys = new Set();
+    const addPath = (path) => {
+      path.forEach((cell) => {
+        const key = keyOf(cell);
+        if (!sameCell(cell, start) && !sameCell(cell, goal) && !safeKeys.has(key)) {
+          blockerKeys.add(key);
+        }
+      });
+    };
+
+    addPath(buildManhattanPath(start, goal, true));
+    addPath(buildManhattanPath(start, goal, false));
+    return shuffle([...blockerKeys]).map((key) => {
+      const [r, c] = key.split(",").map(Number);
+      return { r, c };
+    });
   }
 
   function minDistanceToPath(cell, path) {
@@ -246,18 +356,41 @@
     return false;
   }
 
+  function tryAddBlocker(size, start, cell, blockedKeys, openCellTarget) {
+    const key = keyOf(cell);
+    if (blockedKeys.has(key)) return false;
+    blockedKeys.add(key);
+    const reachableCount = countReachableOpenCells(size, start, blockedKeys);
+    if (reachableCount < openCellTarget) {
+      blockedKeys.delete(key);
+      return false;
+    }
+    return true;
+  }
+
   function buildMaze(level) {
     const size = getGridSize(level);
-    const openCellTarget = Math.max(7, Math.ceil(size * size * 0.5));
+    const difficulty = getMazeDifficulty(level);
+    const openCellTarget = Math.max(7, Math.ceil(size * size * difficulty.openCellRatio));
     const blockerCount = Math.floor(size * size * getBlockerRatio(level));
-    const minPathDistance = Math.abs(size - 1) + (level >= 4 ? 2 : 1);
     let bestMaze = null;
 
-    for (let attempt = 0; attempt < 28; attempt += 1) {
+    for (let attempt = 0; attempt < difficulty.attemptCount; attempt += 1) {
       const { start, goal } = getOppositeEdgeCell(size);
-      const safePath = buildSafePath(size, start, goal);
+      const safePath = buildSafePath(size, start, goal, difficulty);
       const safeKeys = new Set(safePath.map(keyOf));
       const blockedKeys = new Set();
+      const directDistance = manhattanDistance(start, goal);
+      const minPathDistance = directDistance + difficulty.minExtraDistance;
+      const obviousBlockerTarget = Math.min(
+        Math.max(1, blockerCount - 1),
+        difficulty.obviousBlockerLimit,
+      );
+
+      for (const cell of getObviousRouteBlockers(start, goal, safeKeys)) {
+        if (blockedKeys.size >= obviousBlockerTarget) break;
+        tryAddBlocker(size, start, cell, blockedKeys, openCellTarget);
+      }
 
       const candidates = Array.from({ length: size * size }, (_, index) => ({
         r: Math.floor(index / size),
@@ -274,7 +407,11 @@
           roll: Math.random(),
         }))
         .sort((a, b) => {
-          if (a.distToPath !== b.distToPath) return a.distToPath - b.distToPath;
+          if (a.distToPath !== b.distToPath) {
+            return difficulty.crowdPath
+              ? a.distToPath - b.distToPath
+              : b.distToPath - a.distToPath;
+          }
           if (a.distToStartGoal !== b.distToStartGoal) return a.distToStartGoal - b.distToStartGoal;
           return a.roll - b.roll;
         })
@@ -282,17 +419,13 @@
 
       for (const cell of candidates) {
         if (blockedKeys.size >= blockerCount) break;
-        blockedKeys.add(keyOf(cell));
-        const reachableCount = countReachableOpenCells(size, start, blockedKeys);
-        if (reachableCount < openCellTarget) {
-          blockedKeys.delete(keyOf(cell));
-        }
+        tryAddBlocker(size, start, cell, blockedKeys, openCellTarget);
       }
 
       const shortest = findShortestPathLength(size, start, goal, blockedKeys);
       const clearStraightLane = hasClearStraightLane(start, goal, blockedKeys);
 
-      if (!bestMaze || shortest > bestMaze.shortest) {
+      if (Number.isFinite(shortest) && (!bestMaze || shortest > bestMaze.shortest)) {
         bestMaze = { size, start, goal, blockedKeys, shortest };
       }
 
