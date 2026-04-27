@@ -40,30 +40,27 @@
     container.innerHTML = `
       <section class="fill-drink-game">
         <header class="fill-drink-header">
-          <div class="fill-drink-meta">
-            <p id="fill-score-label">Score: 0</p>
-            <p id="fill-lives-label">Lives: ${hearts(START_LIVES)}</p>
-            <p id="fill-level-label">Level: 1</p>
-            <p id="fill-combo-label" class="fill-combo hidden" aria-live="polite">Combo ×1</p>
-            <p id="fill-perfects-label" class="fill-perfects">Next level: 0 / ${WAVE_GOAL}</p>
-            <p id="fill-best-label" class="meta-best hidden">Best: --</p>
+          <div class="fill-drink-meta" role="group" aria-label="Game stats">
+            <p id="fill-score-label" class="fill-chip fill-chip-score" aria-label="Score">⭐ 0</p>
+            <p id="fill-lives-label" class="fill-chip fill-chip-lives" aria-label="Lives">${hearts(START_LIVES)}</p>
+            <p id="fill-level-label" class="fill-chip fill-chip-level" aria-label="Level">Lv 1</p>
+            <p id="fill-wave-label" class="fill-chip fill-chip-wave" aria-label="Perfects until level up" title="Level progress">${"○".repeat(WAVE_GOAL)}</p>
+            <p id="fill-combo-label" class="fill-chip fill-chip-combo hidden" aria-live="polite" aria-label="Combo streak">×1</p>
+            <p id="fill-best-label" class="fill-chip fill-chip-best meta-best hidden" aria-label="Best score">★ —</p>
           </div>
-          <button id="fill-restart-button" class="secondary-button" type="button">Restart</button>
+          <button id="fill-restart-button" class="secondary-button fill-drink-restart" type="button">Restart</button>
         </header>
 
-        <div class="fill-drink-target-card">
-          <p class="target-hint">Hold <strong>Pour</strong> to fill the cup. Stop in the <span class="fill-green-mark">green</span> band — not too little, not over the rim!</p>
-          <div class="fill-drink-target-preview">
-            <span class="symbol" aria-hidden="true">🥤</span>
-            <span id="fill-order-name" class="name">Fill the Drink</span>
-          </div>
-        </div>
-
         <div class="fill-drink-field-wrap">
-          <div class="fill-drink-field" aria-live="polite">
+          <div class="fill-drink-field" aria-live="polite" aria-label="Pour playfield. Green striped band is the target zone.">
             <span class="fill-drink-decor decor-shelf" aria-hidden="true">🍋</span>
             <span class="fill-drink-decor decor-ice" aria-hidden="true">🧊</span>
             <span class="fill-drink-decor decor-herb" aria-hidden="true">🌿</span>
+
+            <div class="fill-order-strip">
+              <span class="fill-order-glyph" aria-hidden="true">🥤</span>
+              <span id="fill-order-name" class="fill-order-name">Berry fizz</span>
+            </div>
 
             <div id="fill-cup-stage" class="fill-cup-stage">
               <div id="fill-cup" class="fill-cup" role="img" aria-label="Empty cup">
@@ -81,8 +78,8 @@
         </div>
 
         <div class="fill-drink-controls">
-          <button type="button" id="fill-pour-button" class="fill-pour-button primary-button">
-            Hold to pour
+          <button type="button" id="fill-pour-button" class="fill-pour-button primary-button" aria-label="Hold to pour, release in the green zone">
+            Pour
           </button>
         </div>
 
@@ -94,11 +91,10 @@
     const livesLabel = container.querySelector("#fill-lives-label");
     const levelLabel = container.querySelector("#fill-level-label");
     const comboLabel = container.querySelector("#fill-combo-label");
-    const perfectsLabel = container.querySelector("#fill-perfects-label");
+    const waveLabel = container.querySelector("#fill-wave-label");
     const bestLabel = container.querySelector("#fill-best-label");
     const cupEl = container.querySelector("#fill-cup");
     const liquidEl = container.querySelector("#fill-liquid");
-    const cupStage = container.querySelector("#fill-cup-stage");
     const spillFx = container.querySelector("#fill-spill-fx");
     const pourButton = container.querySelector("#fill-pour-button");
     const statusMessage = container.querySelector("#fill-status-message");
@@ -127,14 +123,32 @@
     let spillTriggered = false;
     let settling = false;
 
+    function waveDots() {
+      let s = "";
+      for (let i = 0; i < WAVE_GOAL; i += 1) {
+        s += i < perfectsThisLevel ? "●" : "○";
+      }
+      return s;
+    }
+
     function paintMeta() {
-      scoreLabel.textContent = `Score: ${score}`;
-      livesLabel.textContent = `Lives: ${hearts(lives)}`;
-      levelLabel.textContent = `Level: ${level}`;
-      perfectsLabel.textContent = `Next level: ${perfectsThisLevel} / ${WAVE_GOAL}`;
+      scoreLabel.textContent = `⭐ ${score}`;
+      scoreLabel.setAttribute("aria-label", `Score ${score}`);
+      livesLabel.textContent = hearts(lives);
+      livesLabel.setAttribute("aria-label", `${lives} ${lives === 1 ? "life" : "lives"}`);
+      levelLabel.textContent = `Lv ${level}`;
+      levelLabel.setAttribute("aria-label", `Level ${level}`);
+      if (waveLabel) {
+        waveLabel.textContent = waveDots();
+        waveLabel.setAttribute(
+          "aria-label",
+          `${perfectsThisLevel} of ${WAVE_GOAL} perfect pours to level up`,
+        );
+      }
 
       if (streak >= 2) {
-        comboLabel.textContent = `Combo ×${streak}`;
+        comboLabel.textContent = `×${streak}`;
+        comboLabel.setAttribute("aria-label", `Combo times ${streak}`);
         comboLabel.classList.remove("hidden");
       } else {
         comboLabel.classList.add("hidden");
@@ -148,7 +162,8 @@
       if (best == null) {
         bestLabel.classList.add("hidden");
       } else {
-        bestLabel.textContent = `Best: ${best}`;
+        bestLabel.textContent = `★ ${best}`;
+        bestLabel.setAttribute("aria-label", `Best score ${best}`);
         bestLabel.classList.remove("hidden");
       }
     }
@@ -242,7 +257,7 @@
       level += 1;
       perfectsThisLevel = 0;
       paintMeta();
-      setStatus(`Level up! Pour speed ${level > 1 ? "picked up" : "steady"} — green band is trickier now.`, "ok");
+      setStatus("Level up — pour is faster, zone is tighter.", "ok");
       const a = audio();
       if (a) a.play("levelStart");
       pickNextOrder();
@@ -262,7 +277,7 @@
 
       lives -= 1;
       paintMeta();
-      setStatus(duringPour ? "Whoa — it spilled! That costs a heart." : "Over the rim — no points!", "warn");
+      setStatus(duringPour ? "Spill! −1 ❤" : "Too full — no score.", "warn");
 
       if (lives <= 0) {
         endGame();
@@ -289,7 +304,7 @@
         score += base + bonus;
         perfectsThisLevel += 1;
         paintMeta();
-        setStatus(`Perfect pour! +${base + bonus} (${streak >= 2 ? `combo ${streak}` : "nice"})`, "ok");
+        setStatus(streak >= 2 ? `Nice! +${base + bonus} (×${streak})` : `Perfect! +${base + bonus}`, "ok");
         const a = audio();
         if (a) a.play("match");
 
@@ -309,9 +324,7 @@
       streak = 0;
       paintMeta();
       const msg =
-        fill <= 0.001
-          ? "Press and hold Pour, then let go when the drink reaches the green band."
-          : "A little more next time — fill into the green band (not over the top).";
+        fill <= 0.001 ? "Hold pour, release in the green band." : "Too shallow — aim for green.";
       setStatus(msg, "warn");
       const a = audio();
       if (a) a.play("tap", { vibrate: false });
@@ -358,7 +371,7 @@
         paintBestLabel();
       }
 
-      setStatus(`Game over! You scored ${score} points.${bestSuffix} Press restart for another round.`, "end");
+      setStatus(`Game over — ${score} pts.${bestSuffix} Tap Restart.`, "end");
       const a = audio();
       if (a) a.play("win");
     }
@@ -379,7 +392,7 @@
       paintMeta();
       paintBestLabel();
       pickNextOrder();
-      setStatus("Hold the pour button, then release when the drink reaches the green zone.", null);
+      setStatus("Hold pour · release in green · no overflow.", null);
       const a = audio();
       if (a) a.play("levelStart");
     }
