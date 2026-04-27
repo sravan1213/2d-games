@@ -137,6 +137,62 @@
     return path.reverse();
   }
 
+  function buildManhattanPath(a, b, moveRowFirst) {
+    const path = [{ ...a }];
+    let r = a.r;
+    let c = a.c;
+    if (moveRowFirst) {
+      while (r !== b.r) {
+        r += r < b.r ? 1 : -1;
+        path.push({ r, c });
+      }
+      while (c !== b.c) {
+        c += c < b.c ? 1 : -1;
+        path.push({ r, c });
+      }
+      return path;
+    }
+    while (c !== b.c) {
+      c += c < b.c ? 1 : -1;
+      path.push({ r, c });
+    }
+    while (r !== b.r) {
+      r += r < b.r ? 1 : -1;
+      path.push({ r, c });
+    }
+    return path;
+  }
+
+  function buildSafePath(size, start, goal) {
+    const direct = findRandomPath(size, start, goal);
+    const straight = start.r === goal.r || start.c === goal.c;
+    if (!straight || size <= 4) return direct;
+
+    const pivots = shuffle([
+      { r: start.r, c: goal.c },
+      { r: goal.r, c: start.c },
+    ]).filter((p) => !sameCell(p, start) && !sameCell(p, goal));
+
+    for (const pivot of pivots) {
+      const legA = buildManhattanPath(start, pivot, Math.random() > 0.5);
+      const legB = buildManhattanPath(pivot, goal, Math.random() > 0.5).slice(1);
+      const bent = [...legA, ...legB];
+      if (bent.length >= direct.length + 1) return bent;
+    }
+
+    return direct;
+  }
+
+  function minDistanceToPath(cell, path) {
+    let best = Number.POSITIVE_INFINITY;
+    for (const p of path) {
+      const d = Math.abs(cell.r - p.r) + Math.abs(cell.c - p.c);
+      if (d < best) best = d;
+      if (best === 0) return 0;
+    }
+    return best;
+  }
+
   function countReachableOpenCells(size, start, blockedKeys) {
     const seen = new Set([keyOf(start)]);
     const queue = [start];
@@ -152,32 +208,105 @@
     return seen.size;
   }
 
+  function findShortestPathLength(size, start, goal, blockedKeys) {
+    const queue = [{ cell: start, dist: 0 }];
+    const seen = new Set([keyOf(start)]);
+    while (queue.length) {
+      const { cell, dist } = queue.shift();
+      if (sameCell(cell, goal)) return dist;
+      getNeighbors(cell, size).forEach((next) => {
+        const k = keyOf(next);
+        if (seen.has(k) || blockedKeys.has(k)) return;
+        seen.add(k);
+        queue.push({ cell: next, dist: dist + 1 });
+      });
+    }
+    return Number.POSITIVE_INFINITY;
+  }
+
+  function hasClearStraightLane(start, goal, blockedKeys) {
+    if (start.r === goal.r) {
+      const row = start.r;
+      const minC = Math.min(start.c, goal.c);
+      const maxC = Math.max(start.c, goal.c);
+      for (let c = minC + 1; c < maxC; c += 1) {
+        if (blockedKeys.has(`${row},${c}`)) return false;
+      }
+      return true;
+    }
+    if (start.c === goal.c) {
+      const col = start.c;
+      const minR = Math.min(start.r, goal.r);
+      const maxR = Math.max(start.r, goal.r);
+      for (let r = minR + 1; r < maxR; r += 1) {
+        if (blockedKeys.has(`${r},${col}`)) return false;
+      }
+      return true;
+    }
+    return false;
+  }
+
   function buildMaze(level) {
     const size = getGridSize(level);
-    const { start, goal } = getOppositeEdgeCell(size);
-    const safePath = findRandomPath(size, start, goal);
-    const safeKeys = new Set(safePath.map(keyOf));
-    const blockedKeys = new Set();
     const openCellTarget = Math.max(7, Math.ceil(size * size * 0.5));
     const blockerCount = Math.floor(size * size * getBlockerRatio(level));
+    const minPathDistance = Math.abs(size - 1) + (level >= 4 ? 2 : 1);
+    let bestMaze = null;
 
-    const candidates = shuffle(
-      Array.from({ length: size * size }, (_, index) => ({
+    for (let attempt = 0; attempt < 28; attempt += 1) {
+      const { start, goal } = getOppositeEdgeCell(size);
+      const safePath = buildSafePath(size, start, goal);
+      const safeKeys = new Set(safePath.map(keyOf));
+      const blockedKeys = new Set();
+
+      const candidates = Array.from({ length: size * size }, (_, index) => ({
         r: Math.floor(index / size),
         c: index % size,
-      })).filter((cell) => !safeKeys.has(keyOf(cell))),
-    );
+      }))
+        .filter((cell) => !safeKeys.has(keyOf(cell)))
+        .map((cell) => ({
+          cell,
+          distToPath: minDistanceToPath(cell, safePath),
+          distToStartGoal: Math.min(
+            Math.abs(cell.r - start.r) + Math.abs(cell.c - start.c),
+            Math.abs(cell.r - goal.r) + Math.abs(cell.c - goal.c),
+          ),
+          roll: Math.random(),
+        }))
+        .sort((a, b) => {
+          if (a.distToPath !== b.distToPath) return a.distToPath - b.distToPath;
+          if (a.distToStartGoal !== b.distToStartGoal) return a.distToStartGoal - b.distToStartGoal;
+          return a.roll - b.roll;
+        })
+        .map((entry) => entry.cell);
 
-    for (const cell of candidates) {
-      if (blockedKeys.size >= blockerCount) break;
-      blockedKeys.add(keyOf(cell));
-      const reachableCount = countReachableOpenCells(size, start, blockedKeys);
-      if (reachableCount < openCellTarget) {
-        blockedKeys.delete(keyOf(cell));
+      for (const cell of candidates) {
+        if (blockedKeys.size >= blockerCount) break;
+        blockedKeys.add(keyOf(cell));
+        const reachableCount = countReachableOpenCells(size, start, blockedKeys);
+        if (reachableCount < openCellTarget) {
+          blockedKeys.delete(keyOf(cell));
+        }
+      }
+
+      const shortest = findShortestPathLength(size, start, goal, blockedKeys);
+      const clearStraightLane = hasClearStraightLane(start, goal, blockedKeys);
+
+      if (!bestMaze || shortest > bestMaze.shortest) {
+        bestMaze = { size, start, goal, blockedKeys, shortest };
+      }
+
+      if (!clearStraightLane && Number.isFinite(shortest) && shortest >= minPathDistance) {
+        return { size, start, goal, blockedKeys };
       }
     }
 
-    return { size, start, goal, blockedKeys };
+    if (bestMaze) {
+      return { size, start: bestMaze.start, goal: bestMaze.goal, blockedKeys: bestMaze.blockedKeys };
+    }
+
+    const { start, goal } = getOppositeEdgeCell(size);
+    return { size, start, goal, blockedKeys: new Set() };
   }
 
   function createPathFinderGame({ container }) {
