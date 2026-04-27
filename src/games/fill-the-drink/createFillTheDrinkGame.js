@@ -9,18 +9,14 @@
     return "❤".repeat(Math.max(0, count)) || "💔";
   }
 
-  const CUP_VARIANTS = [
-    { id: "tall", label: "Tall glass", className: "cup-variant-tall" },
-    { id: "wide", label: "Wide cup", className: "cup-variant-wide" },
-    { id: "stem", label: "Fancy stem", className: "cup-variant-stem" },
-  ];
+  const CUP_VARIANTS = [{ id: "pint", label: "Tumbler glass", className: "cup-variant-pint" }];
 
   const DRINK_COLORS = [
-    { name: "Berry fizz", liquid: "linear-gradient(180deg,#ff7eb3 0%,#c44a8a 100%)" },
-    { name: "Ocean lime", liquid: "linear-gradient(180deg,#7cf0ff 0%,#1d9a6c 55%,#0d6e4a 100%)" },
-    { name: "Sunset swirl", liquid: "linear-gradient(180deg,#ffd670 0%,#ff8c42 50%,#e63946 100%)" },
-    { name: "Grape pop", liquid: "linear-gradient(180deg,#d4b5ff 0%,#8b2fff 45%,#5c1fa8 100%)" },
-    { name: "Mint splash", liquid: "linear-gradient(180deg,#d4fff4 0%,#3ecfc0 60%,#1a9e8f 100%)" },
+    { name: "Berry fizz", color: "#ff7eb3", liquid: "linear-gradient(180deg,#ff7eb3 0%,#c44a8a 100%)" },
+    { name: "Ocean lime", color: "#7cf0ff", liquid: "linear-gradient(180deg,#7cf0ff 0%,#1d9a6c 55%,#0d6e4a 100%)" },
+    { name: "Sunset swirl", color: "#ffd670", liquid: "linear-gradient(180deg,#ffd670 0%,#ff8c42 50%,#e63946 100%)" },
+    { name: "Grape pop", color: "#d4b5ff", liquid: "linear-gradient(180deg,#d4b5ff 0%,#8b2fff 45%,#5c1fa8 100%)" },
+    { name: "Mint splash", color: "#d4fff4", liquid: "linear-gradient(180deg,#d4fff4 0%,#3ecfc0 60%,#1a9e8f 100%)" },
   ];
 
   function pickRandom(arr) {
@@ -52,7 +48,7 @@
         </header>
 
         <div class="fill-drink-target-card">
-          <p class="target-hint">Hold <strong>Pour</strong> to fill the cup. Stop in the <span class="fill-green-mark">green</span> band — not too little, not over the rim!</p>
+          <p class="target-hint">Busy soda rush! Fill each cone glass from the vending station and stop in the <span class="fill-green-mark">green</span> band.</p>
           <div class="fill-drink-target-preview">
             <span class="symbol" aria-hidden="true">🥤</span>
             <span id="fill-order-name" class="name">Fill the Drink</span>
@@ -61,20 +57,30 @@
 
         <div class="fill-drink-field-wrap">
           <div class="fill-drink-field" aria-live="polite">
-            <span class="fill-drink-decor decor-shelf" aria-hidden="true">🍋</span>
-            <span class="fill-drink-decor decor-ice" aria-hidden="true">🧊</span>
-            <span class="fill-drink-decor decor-herb" aria-hidden="true">🌿</span>
-
-            <div id="fill-cup-stage" class="fill-cup-stage">
-              <div id="fill-cup" class="fill-cup" role="img" aria-label="Empty cup">
-                <div class="fill-cup-rim" aria-hidden="true"></div>
-                <div class="fill-cup-body">
-                  <div class="fill-cup-zone" aria-hidden="true" title="Fill to here"></div>
-                  <div id="fill-liquid" class="fill-liquid" aria-hidden="true"></div>
-                </div>
-                <div class="fill-cup-base" aria-hidden="true"></div>
+            <div class="fill-vending-machine" aria-hidden="true">
+              <div class="machine-title">Cold Drink Station</div>
+              <div class="machine-nozzle"></div>
+              <div class="machine-levers">
+                <span class="machine-lever active"></span>
               </div>
             </div>
+
+            <div id="fill-order-queue" class="fill-order-queue" aria-label="Waiting glasses"></div>
+            <div id="fill-cup-stage" class="fill-cup-stage">
+              <div id="fill-pour-stream" class="fill-pour-stream hidden" aria-hidden="true"></div>
+              <div id="fill-stream-splash" class="stream-splash hidden" aria-hidden="true" style="display: none;"></div>
+              <div id="fill-cup" class="fill-cup" role="img" aria-label="Empty cup">
+                <div class="fill-cup-body">
+                  <div class="fill-cup-zone" aria-hidden="true" title="Fill to here"></div>
+                  <div class="fill-liquid-mask" aria-hidden="true">
+                    <div id="fill-liquid" class="fill-liquid" aria-hidden="true"></div>
+                  </div>
+                </div>
+                <img class="fill-cup-shell" src="/src/games/fill-the-drink/tumbler-frame.svg" alt="" aria-hidden="true" />
+              </div>
+            </div>
+            <div id="fill-done-rail" class="fill-done-rail" aria-label="Completed drinks"></div>
+            <div id="fill-floor-spill" class="fill-floor-spill hidden" aria-hidden="true"></div>
 
             <div id="fill-spill-fx" class="fill-spill-fx hidden" aria-hidden="true"></div>
           </div>
@@ -98,7 +104,13 @@
     const bestLabel = container.querySelector("#fill-best-label");
     const cupEl = container.querySelector("#fill-cup");
     const liquidEl = container.querySelector("#fill-liquid");
+    const streamSplash = container.querySelector("#fill-stream-splash");
     const cupStage = container.querySelector("#fill-cup-stage");
+    const pourStream = container.querySelector("#fill-pour-stream");
+    const orderQueueEl = container.querySelector("#fill-order-queue");
+    const doneRail = container.querySelector("#fill-done-rail");
+    const floorSpill = container.querySelector("#fill-floor-spill");
+    const leverEls = Array.from(container.querySelectorAll(".machine-lever"));
     const spillFx = container.querySelector("#fill-spill-fx");
     const pourButton = container.querySelector("#fill-pour-button");
     const statusMessage = container.querySelector("#fill-status-message");
@@ -121,11 +133,13 @@
     let pourPerSecond = getPourPerSecond(1);
     let cupVariant = CUP_VARIANTS[0];
     let drink = DRINK_COLORS[0];
+    let orderQueue = [];
 
     let rafId = null;
     let lastTick = 0;
     let spillTriggered = false;
     let settling = false;
+    let pourSoundTimer = null;
 
     function paintMeta() {
       scoreLabel.textContent = `Score: ${score}`;
@@ -159,18 +173,76 @@
       if (variant) statusMessage.classList.add(variant);
     }
 
+    function createOrder() {
+      return {
+        cupVariant: pickRandom(CUP_VARIANTS),
+        drink: pickRandom(DRINK_COLORS),
+      };
+    }
+
+    function miniGlassHtml(order, filled = false) {
+      const fillStyle = filled ? ` style="--mini-drink:${order.drink.color};"` : "";
+      return `
+        <span class="mini-glass ${order.cupVariant.className} ${filled ? "is-filled" : ""}"${fillStyle}>
+          <span class="mini-glass-liquid"></span>
+        </span>
+      `;
+    }
+
+    function renderQueue() {
+      if (!orderQueueEl) return;
+      orderQueueEl.innerHTML = orderQueue
+        .map((order, index) => `
+          <span class="queue-ticket ${index === 0 ? "is-next" : ""}">
+            ${miniGlassHtml(order)}
+          </span>
+        `)
+        .join("");
+    }
+
+    function pushCompletedGlass(order) {
+      if (!doneRail) return;
+      const wrapper = document.createElement("span");
+      wrapper.className = "done-drink";
+      wrapper.innerHTML = miniGlassHtml(order, true);
+      doneRail.prepend(wrapper);
+      while (doneRail.children.length > 5) {
+        doneRail.removeChild(doneRail.lastElementChild);
+      }
+    }
+
     function applyCupVariant() {
       cupEl.className = `fill-cup ${cupVariant.className}`;
       cupEl.setAttribute("aria-label", `${cupVariant.label}, order ${drink.name}`);
       if (orderNameEl) orderNameEl.textContent = drink.name;
+      leverEls.forEach((el, index) => {
+        el.classList.toggle("active", index === 0);
+        el.style.setProperty("--lever-color", drink.color);
+      });
     }
 
     function paintLiquid() {
+      const pct = Math.min(1.15, fill) * 100;
+      liquidEl.style.setProperty("--fill-pct", `${pct}%`);
+      if (cupStage) cupStage.style.setProperty("--fill-pct", String(pct));
       liquidEl.style.background = drink.liquid;
-      liquidEl.style.setProperty("--fill-pct", String(Math.min(1.15, fill) * 100));
+      
+      const gameRoot = container.querySelector(".fill-drink-game");
+      if (gameRoot) gameRoot.style.setProperty("--stream-color", drink.color);
+
       const inZone = fill >= zoneMin && fill <= 1;
       cupEl.classList.toggle("is-in-zone", pouring && inZone);
       cupEl.classList.toggle("is-danger", pouring && fill > 0.96);
+
+      if (streamSplash) streamSplash.style.display = pouring && fill > 0.05 && fill < 0.9 ? "block" : "none";
+
+      if (pouring && fill > 0 && Math.random() > 0.6) {
+        const fizz = document.createElement("div");
+        fizz.className = "fizz-bubble";
+        fizz.style.left = `${Math.random() * 100}%`;
+        liquidEl.appendChild(fizz);
+        setTimeout(() => fizz.remove(), 1000);
+      }
     }
 
     function paintZoneBand() {
@@ -181,16 +253,48 @@
 
     function pickNextOrder() {
       settling = false;
-      cupVariant = pickRandom(CUP_VARIANTS);
-      drink = pickRandom(DRINK_COLORS);
+      if (orderQueue.length === 0) {
+        orderQueue = [createOrder(), createOrder(), createOrder()];
+      }
+      const nextOrder = orderQueue.shift();
+      orderQueue.push(createOrder());
+      cupVariant = nextOrder.cupVariant;
+      drink = nextOrder.drink;
       zoneMin = getZoneMin(level);
       pourPerSecond = getPourPerSecond(level);
       fill = 0;
       applyCupVariant();
+      renderQueue();
       paintLiquid();
       paintZoneBand();
       spillFx.classList.add("hidden");
+      if (pourStream) pourStream.classList.add("hidden");
+      if (streamSplash) streamSplash.style.display = 'none';
       cupEl.classList.remove("is-spill", "is-settle");
+      cupEl.classList.add("is-arriving");
+      window.setTimeout(() => cupEl.classList.remove("is-arriving"), 260);
+    }
+
+    function stopPourSfx() {
+      if (pourSoundTimer != null) {
+        clearInterval(pourSoundTimer);
+        pourSoundTimer = null;
+      }
+    }
+
+    function startPourSfx() {
+      stopPourSfx();
+      const a = audio();
+      if (!a) return;
+      a.play("pourTick", { vibrate: false });
+      pourSoundTimer = window.setInterval(() => {
+        if (!pouring || ended) {
+          stopPourSfx();
+          return;
+        }
+        const fx = audio();
+        if (fx) fx.play("pourTick", { vibrate: false });
+      }, 320);
     }
 
     function stopPourLoop() {
@@ -229,13 +333,62 @@
     }
 
     function burstSpillFx() {
-      spillFx.classList.remove("hidden");
-      spillFx.textContent = "💦 splish!";
-      cupEl.classList.add("is-spill");
+      cupEl.classList.add("cup-shake");
+      const numDrops = 30;
+      
+      for (let i=0; i<numDrops; i++) {
+        const drop = document.createElement("div");
+        drop.className = "spill-particle";
+        drop.style.setProperty("--stream-color", drink.color);
+        const angle = -Math.PI / 2 + (Math.random() - 0.5) * Math.PI * 0.9;
+        const velocity = 100 + Math.random() * 180;
+        const dx = Math.cos(angle) * velocity;
+        const dy = Math.sin(angle) * velocity + 150;
+        drop.style.setProperty("--dx", `${dx}px`);
+        drop.style.setProperty("--dy", `${dy}px`);
+        drop.style.left = `calc(50% + ${(Math.random() - 0.5) * 50}px)`;
+        drop.style.animation = `flyOut ${0.4 + Math.random() * 0.5}s cubic-bezier(0.25, 1, 0.5, 1) forwards`;
+        if (cupStage) cupStage.appendChild(drop);
+        
+        setTimeout(() => drop.remove(), 1000);
+      }
+
+      if (floorSpill) {
+        floorSpill.style.setProperty("--stream-color", drink.color);
+        floorSpill.classList.remove("hidden");
+        floorSpill.classList.add("show");
+        window.setTimeout(() => {
+          floorSpill.classList.remove("show");
+          floorSpill.classList.add("hidden");
+        }, 980);
+      }
+
       window.setTimeout(() => {
-        spillFx.classList.add("hidden");
-        cupEl.classList.remove("is-spill");
-      }, 650);
+        cupEl.classList.remove("cup-shake");
+      }, 500);
+    }
+
+    function onUnderfill() {
+      if (ended) return;
+      streak = 0;
+      lives -= 1;
+      paintMeta();
+
+      const a = audio();
+      if (a) a.play("miss");
+
+      setStatus("Underfilled order! That costs a heart. Fill to the green band.", "warn");
+      cupEl.classList.add("is-settle");
+
+      if (lives <= 0) {
+        endGame();
+        return;
+      }
+
+      settling = true;
+      window.setTimeout(() => {
+        if (!ended) pickNextOrder();
+      }, 520);
     }
 
     function levelUp() {
@@ -253,6 +406,11 @@
       pouring = false;
       stopPourLoop();
       pourButton.classList.remove("is-pouring");
+      cupEl.classList.remove("is-pouring");
+      if (pourStream) pourStream.classList.add("hidden");
+      if (cupStage) cupStage.classList.remove("is-pouring");
+      if (streamSplash) streamSplash.style.display = 'none';
+      stopPourSfx();
       streak = 0;
       paintMeta();
 
@@ -283,6 +441,7 @@
         return;
       }
       if (fill >= zoneMin && fill <= 1) {
+        pushCompletedGlass({ cupVariant, drink });
         streak += 1;
         const base = 10 + level * 2;
         const bonus = Math.min(streak, 10) * 3;
@@ -307,12 +466,13 @@
       }
 
       streak = 0;
+      if (fill > 0.02) {
+        onUnderfill();
+        return;
+      }
+
       paintMeta();
-      const msg =
-        fill <= 0.001
-          ? "Press and hold Pour, then let go when the drink reaches the green band."
-          : "A little more next time — fill into the green band (not over the top).";
-      setStatus(msg, "warn");
+      setStatus("Press and hold Pour, then let go when the drink reaches the green band.", "warn");
       const a = audio();
       if (a) a.play("tap", { vibrate: false });
 
@@ -329,17 +489,35 @@
       pouring = true;
       spillTriggered = false;
       pourButton.classList.add("is-pouring");
+      cupEl.classList.add("is-pouring");
+      if (pourStream) pourStream.classList.remove("hidden");
+      if (cupStage) cupStage.classList.add("is-pouring");
       const a = audio();
       if (a) a.play("tap", { vibrate: false });
+      startPourSfx();
       startPourLoop();
     }
 
-    function endPour() {
+    function endPour(options = {}) {
+      const commit = options.commit !== false;
       if (!pouring || ended) return;
       pouring = false;
       pourButton.classList.remove("is-pouring");
+      cupEl.classList.remove("is-pouring");
+      if (pourStream) pourStream.classList.add("hidden");
+      if (cupStage) cupStage.classList.remove("is-pouring");
+      if (streamSplash) streamSplash.style.display = 'none';
+      stopPourSfx();
       stopPourLoop();
-      commitPour();
+      if (commit) commitPour();
+    }
+
+    function onGlobalRelease() {
+      if (pouring && !ended) endPour({ commit: true });
+    }
+
+    function suppressHoldMenu(ev) {
+      ev.preventDefault();
     }
 
     function endGame() {
@@ -347,6 +525,11 @@
       stopPourLoop();
       pouring = false;
       pourButton.classList.remove("is-pouring");
+      cupEl.classList.remove("is-pouring");
+      if (pourStream) pourStream.classList.add("hidden");
+      if (cupStage) cupStage.classList.remove("is-pouring");
+      if (streamSplash) streamSplash.style.display = 'none';
+      stopPourSfx();
       pourButton.disabled = true;
 
       const s = storage();
@@ -372,7 +555,12 @@
       perfectsThisLevel = 0;
       ended = false;
       pouring = false;
+      orderQueue = [createOrder(), createOrder(), createOrder()];
+      if (doneRail) doneRail.innerHTML = "";
       pourButton.disabled = false;
+      cupEl.classList.remove("is-pouring");
+      if (pourStream) pourStream.classList.add("hidden");
+      if (streamSplash) streamSplash.style.display = 'none';
 
       const sPlay = storage();
       if (sPlay) sPlay.startPlay(BEST_KEY);
@@ -386,7 +574,7 @@
 
     function onVisibilityChange() {
       if (document.hidden && pouring && !ended) {
-        endPour();
+        endPour({ commit: true });
       }
     }
 
@@ -394,6 +582,15 @@
     pourButton.addEventListener("pointerup", endPour);
     pourButton.addEventListener("pointerleave", endPour);
     pourButton.addEventListener("pointercancel", endPour);
+    pourButton.addEventListener("contextmenu", suppressHoldMenu);
+    cupStage.addEventListener("contextmenu", suppressHoldMenu);
+    container.addEventListener("contextmenu", suppressHoldMenu);
+    window.addEventListener("pointerup", onGlobalRelease);
+    window.addEventListener("pointercancel", onGlobalRelease);
+    window.addEventListener("mouseup", onGlobalRelease);
+    window.addEventListener("touchend", onGlobalRelease, { passive: true });
+    window.addEventListener("touchcancel", onGlobalRelease, { passive: true });
+    window.addEventListener("blur", onGlobalRelease);
 
     restartButton.addEventListener("click", () => {
       const a = audio();
@@ -409,7 +606,17 @@
       destroy() {
         ended = true;
         stopPourLoop();
+        stopPourSfx();
         document.removeEventListener("visibilitychange", onVisibilityChange);
+        window.removeEventListener("pointerup", onGlobalRelease);
+        window.removeEventListener("pointercancel", onGlobalRelease);
+        window.removeEventListener("mouseup", onGlobalRelease);
+        window.removeEventListener("touchend", onGlobalRelease);
+        window.removeEventListener("touchcancel", onGlobalRelease);
+        window.removeEventListener("blur", onGlobalRelease);
+        pourButton.removeEventListener("contextmenu", suppressHoldMenu);
+        cupStage.removeEventListener("contextmenu", suppressHoldMenu);
+        container.removeEventListener("contextmenu", suppressHoldMenu);
         container.innerHTML = "";
       },
     };

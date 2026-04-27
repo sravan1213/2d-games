@@ -3443,6 +3443,31 @@ body.is-playing .meta-best {
   padding: 8px 0 4px;
 }
 
+.fill-pour-stream {
+  position: absolute;
+  top: -34px;
+  left: 50%;
+  width: 12px;
+  height: 42px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: var(--stream-color, #7cf0ff);
+  filter: drop-shadow(0 0 10px var(--stream-color, #7cf0ff));
+  z-index: 5;
+  opacity: 0.92;
+  animation: fillPourStream 180ms linear infinite;
+}
+
+.fill-pour-stream.hidden {
+  display: none;
+}
+
+@keyframes fillPourStream {
+  0% { transform: translateX(-50%) scaleY(1); opacity: 0.82; }
+  50% { transform: translateX(-50%) scaleY(1.08); opacity: 0.96; }
+  100% { transform: translateX(-50%) scaleY(1); opacity: 0.82; }
+}
+
 .fill-cup {
   position: relative;
   width: 100%;
@@ -3475,29 +3500,66 @@ body.is-playing .meta-best {
 }
 
 .fill-cup-rim {
-  width: 72%;
-  height: 10px;
-  border-radius: 999px;
-  background: linear-gradient(180deg, #f8f8ff 0%, #d8d0ee 100%);
-  border: 1px solid rgba(80, 60, 120, 0.15);
-  box-shadow: 0 2px 0 rgba(255, 255, 255, 0.85) inset;
-  z-index: 3;
+  position: relative;
+  width: 80%;
+  height: 16px;
+  border-radius: 4px;
+  background: #ffffff;
+  border: 2px solid #222;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.1);
+  z-index: 10;
+}
+
+.cup-lid-top {
+  position: absolute;
+  top: -10px;
+  left: 10%;
+  width: 80%;
+  height: 14px;
+  background: #ffffff;
+  border: 2px solid #222;
+  border-radius: 4px 4px 0 0;
+  border-bottom: none;
+  z-index: 9;
+}
+
+.cup-straw {
+  position: absolute;
+  top: -65px;
+  left: 45%;
+  transform: rotate(-10deg);
+  width: 12px;
+  height: 70px;
+  background: repeating-linear-gradient(
+    -45deg,
+    #ffffff,
+    #ffffff 8px,
+    #ffcc00 8px,
+    #ffcc00 16px
+  );
+  border: 2px solid #222;
+  border-radius: 2px;
+  z-index: 8;
 }
 
 .fill-cup-body {
   position: relative;
-  width: 62%;
+  width: 72%;
   flex: 1 1 auto;
   min-height: clamp(140px, 38cqh, 220px);
-  border-radius: 0 0 18px 18px;
-  background: linear-gradient(90deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.08) 35%, rgba(255, 255, 255, 0.2) 100%);
-  border: 2px solid rgba(100, 80, 160, 0.2);
+  background: #ffffff;
+  border: 2px solid #222;
   border-top: none;
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.5),
-    inset 0 -14px 24px rgba(124, 92, 255, 0.06);
   overflow: hidden;
   margin-top: -2px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 4;
+}
+
+.fill-cup-body::before {
+  display: none;
 }
 
 .fill-cup-zone {
@@ -3507,14 +3569,8 @@ body.is-playing .meta-best {
   bottom: 85%;
   top: 0;
   z-index: 1;
-  background: repeating-linear-gradient(
-    -45deg,
-    rgba(45, 198, 83, 0.22),
-    rgba(45, 198, 83, 0.22) 6px,
-    rgba(45, 198, 83, 0.1) 6px,
-    rgba(45, 198, 83, 0.1) 12px
-  );
-  border-bottom: 2px dashed rgba(23, 154, 86, 0.55);
+  background: rgba(45, 198, 83, 0.15);
+  border-bottom: 2px solid #28a745;
   pointer-events: none;
 }
 
@@ -3526,54 +3582,114 @@ body.is-playing .meta-best {
   bottom: 0;
   height: var(--fill-pct);
   z-index: 2;
-  border-radius: 0 0 14px 14px;
-  transition: height 40ms linear;
-  box-shadow: inset 0 8px 16px rgba(255, 255, 255, 0.35);
+  transition: height 38ms linear;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.fill-liquid::before {
+  content: "";
+  position: absolute;
+  left: -2%;
+  right: -2%;
+  top: 0;
+  height: 10px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0.1) 100%);
+  animation: fillWaveSurface 1.4s ease-in-out infinite;
+}
+
+@keyframes fillWaveSurface {
+  0%, 100% { transform: translateX(0) scaleX(1); opacity: 0.75; }
+  50% { transform: translateX(2px) scaleX(0.97); opacity: 0.92; }
+}
+
+.fill-cup.is-pouring .fill-liquid::before {
+  animation-duration: 560ms;
+}
+
+.fill-cup.is-pouring .fill-liquid {
+  filter: saturate(1.12);
 }
 
 .fill-cup-base {
-  width: 78%;
-  height: 12px;
-  margin-top: -1px;
-  border-radius: 0 0 12px 12px;
-  background: linear-gradient(180deg, #ebe6ff 0%, #cfc4f0 100%);
-  border: 1px solid rgba(80, 60, 120, 0.12);
+  width: 65%;
+  height: 4px;
+  margin-top: -2px;
+  background: #222;
+  border-radius: 0 0 4px 4px;
+}
+
+.cup-branding {
+  position: absolute;
+  top: 15%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 8;
+  opacity: 0.95;
+}
+
+.cup-logo {
+  background: #e6192e;
+  width: 54px;
+  height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 2px;
+  margin-bottom: 8px;
+  border: 2px solid #222;
+}
+
+.m-arch {
+  color: #ffc72c;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-weight: 900;
+  font-size: 42px;
+  line-height: 1;
+  text-shadow: 2px 2px 0 #222;
+}
+
+.cup-text {
+  color: #0046ad;
+  font-family: inherit;
+  font-weight: 900;
+  font-size: 16px;
+  line-height: 1.1;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: -0.2px;
+  -webkit-text-stroke: 0.5px white;
 }
 
 .fill-cup.is-in-zone .fill-cup-body {
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.55),
-    inset 0 -14px 24px rgba(45, 198, 83, 0.12),
-    0 0 0 3px rgba(45, 198, 83, 0.25);
+  border: 4px solid #4ad18a;
 }
 
 .fill-cup.is-danger .fill-cup-body {
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.5),
-    0 0 0 3px rgba(230, 57, 70, 0.28);
+  border: 4px solid #ff4d4d;
 }
 
-.cup-variant-tall .fill-cup-body {
-  min-height: clamp(160px, 44cqh, 260px);
-  width: 52%;
+.cup-variant-highball .fill-cup-rim { width: 68%; }
+.cup-variant-highball .fill-cup-body {
+  min-height: clamp(170px, 46cqh, 270px); width: 60%;
+  clip-path: polygon(6% 0%, 94% 0%, 88% 100%, 12% 100%);
 }
+.cup-variant-highball .fill-cup-base { width: 48%; }
 
-.cup-variant-wide .fill-cup-body {
-  min-height: clamp(110px, 32cqh, 180px);
-  width: 78%;
+.cup-variant-rocks .fill-cup-rim { width: 84%; }
+.cup-variant-rocks .fill-cup-body {
+  min-height: clamp(105px, 30cqh, 170px); width: 78%;
+  clip-path: polygon(3% 0%, 97% 0%, 92% 100%, 8% 100%);
 }
+.cup-variant-rocks .fill-cup-base { width: 68%; }
 
-.cup-variant-stem .fill-cup-body {
-  min-height: clamp(130px, 36cqh, 210px);
-  width: 58%;
-  border-radius: 0 0 22px 22px;
+.cup-variant-pint .fill-cup-rim { width: 76%; }
+.cup-variant-pint .fill-cup-body {
+  min-height: clamp(148px, 40cqh, 230px); width: 68%;
+  clip-path: polygon(5% 0%, 95% 0%, 86% 100%, 14% 100%);
 }
-
-.cup-variant-stem .fill-cup-base {
-  width: 44%;
-  height: 28px;
-  border-radius: 0 0 8px 8px;
-}
+.cup-variant-pint .fill-cup-base { width: 54%; }
 
 .fill-spill-fx {
   position: absolute;
@@ -3598,6 +3714,59 @@ body.is-playing .meta-best {
   100% { opacity: 0; transform: translateX(-50%) translateY(-10px) scale(1); }
 }
 
+.stream-splash {
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--fill-pct, 0) * 1% - 10px);
+  width: 50px; height: 20px; margin-left: -25px;
+  border-radius: 50%;
+  background: var(--stream-color, #7cf0ff);
+  filter: blur(6px);
+  opacity: 0.8;
+  animation: splashPulse 0.15s linear infinite;
+  pointer-events: none;
+  z-index: 11;
+}
+
+@keyframes splashPulse {
+  0% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.4); opacity: 0.4; }
+  100% { transform: scale(1); opacity: 0.8; }
+}
+
+.fizz-bubble {
+  position: absolute;
+  bottom: -10px;
+  width: 8px; height: 8px;
+  background: rgba(255,255,255,0.7);
+  border-radius: 50%;
+  animation: floatUp 1s ease-in forwards;
+  pointer-events: none;
+  z-index: 5;
+}
+
+@keyframes floatUp {
+  0% { transform: translateY(0) scale(0.5); opacity: 1; }
+  100% { transform: translateY(-120px) scale(1.5); opacity: 0; }
+}
+
+.spill-particle {
+  position: absolute;
+  top: 0px;
+  width: 14px; height: 18px;
+  background: var(--stream-color, #7cf0ff);
+  border-radius: 50%;
+  box-shadow: 0 0 8px var(--stream-color, #7cf0ff);
+  pointer-events: none;
+  z-index: 20;
+}
+
+@keyframes flyOut {
+  0% { transform: translate(0, 0) scale(1); opacity: 1; }
+  80% { opacity: 1; }
+  100% { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0; }
+}
+
 .fill-drink-controls {
   flex: 0 0 auto;
   display: flex;
@@ -3611,6 +3780,14 @@ body.is-playing .meta-best {
   font-size: 1.05rem;
   font-weight: 800;
   touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.fill-drink-field,
+.fill-cup-stage {
+  -webkit-touch-callout: none;
   user-select: none;
   -webkit-user-select: none;
 }
@@ -3993,4 +4170,875 @@ body.is-playing .meta-best {
   .stats-card-sparkle,
   .stats-crown { animation: none; }
   .stats-card { transition: none; }
+}
+
+/* Fill the Drink: vending-machine rush scene */
+.fill-drink-field {
+  justify-content: flex-end;
+  gap: clamp(8px, 2cqmin, 14px);
+  padding-top: clamp(88px, 22cqh, 128px);
+  background:
+    linear-gradient(180deg, rgba(39, 54, 90, 0.16) 0 26%, transparent 26%),
+    radial-gradient(circle at 50% 86%, rgba(255, 255, 255, 0.88) 0%, transparent 48%),
+    linear-gradient(180deg, #eaf5ff 0%, #fff8ec 58%, #f2e7ff 100%);
+}
+
+.fill-vending-machine {
+  position: absolute;
+  top: clamp(8px, 2cqh, 18px);
+  left: 50%;
+  width: min(360px, 92%);
+  min-height: clamp(78px, 18cqh, 112px);
+  transform: translateX(-50%);
+  border-radius: 20px 20px 28px 28px;
+  background:
+    linear-gradient(180deg, #38496c 0%, #26334f 100%),
+    radial-gradient(circle at 18% 20%, rgba(255,255,255,0.22), transparent 34%);
+  border: 3px solid rgba(20, 28, 48, 0.9);
+  box-shadow:
+    inset 0 2px 0 rgba(255,255,255,0.26),
+    0 14px 24px rgba(35, 45, 78, 0.18);
+  z-index: 2;
+}
+
+.machine-title {
+  position: absolute;
+  top: 9px;
+  left: 16px;
+  right: 16px;
+  color: #fff8d7;
+  font-size: clamp(0.72rem, 2.2cqmin, 0.92rem);
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.machine-nozzle {
+  position: absolute;
+  left: 50%;
+  bottom: -20px;
+  width: 44px;
+  height: 30px;
+  transform: translateX(-50%);
+  border-radius: 0 0 16px 16px;
+  background: linear-gradient(180deg, #f4f8ff 0%, #99a7bd 100%);
+  border: 3px solid #1c263c;
+  box-shadow: inset 0 2px 0 rgba(255,255,255,0.75);
+}
+
+.machine-nozzle::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -12px;
+  width: 16px;
+  height: 14px;
+  transform: translateX(-50%);
+  border-radius: 0 0 8px 8px;
+  background: #1c263c;
+}
+
+.machine-levers {
+  position: absolute;
+  right: 18px;
+  bottom: 16px;
+  display: flex;
+  gap: 12px;
+}
+
+.machine-lever {
+  position: relative;
+  width: 14px;
+  height: 42px;
+  border-radius: 999px;
+  background: #dfe7f8;
+  border: 2px solid #151e31;
+  box-shadow: inset 0 -12px 0 rgba(0,0,0,0.16);
+}
+
+.machine-lever::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -8px;
+  width: 26px;
+  height: 14px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: var(--lever-color, #7cf0ff);
+  border: 2px solid #151e31;
+}
+
+.machine-lever.active {
+  transform: translateY(8px);
+}
+
+.fill-order-queue,
+.fill-done-rail {
+  position: absolute;
+  z-index: 3;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: clamp(6px, 2cqmin, 12px);
+  width: min(430px, 100%);
+  min-height: 42px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.58);
+  border: 1px solid rgba(75, 87, 130, 0.16);
+}
+
+.fill-order-queue {
+  left: clamp(10px, 4cqw, 28px);
+  bottom: clamp(74px, 17cqh, 116px);
+  width: auto;
+  max-width: min(180px, 36%);
+  min-height: 0;
+  flex-direction: column;
+  align-items: stretch;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.72);
+}
+
+.queue-ticket {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 128px;
+  padding: 5px 8px 5px 5px;
+  border-radius: 999px;
+  color: #344160;
+  font-size: clamp(0.62rem, 1.9cqmin, 0.76rem);
+  font-weight: 800;
+  background: #fff;
+  box-shadow: 0 4px 10px rgba(43, 56, 96, 0.1);
+  white-space: nowrap;
+}
+
+.queue-ticket span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.queue-ticket.is-next {
+  outline: 3px solid rgba(45, 198, 83, 0.26);
+}
+
+.fill-done-rail {
+  right: clamp(10px, 4cqw, 28px);
+  bottom: clamp(74px, 17cqh, 116px);
+  width: auto;
+  max-width: min(150px, 32%);
+  min-height: 46px;
+  justify-content: flex-start;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.48);
+}
+
+.done-drink {
+  animation: doneDrinkPop 260ms ease both;
+}
+
+@keyframes doneDrinkPop {
+  0% { transform: translateY(-10px) scale(0.82); opacity: 0; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.mini-glass {
+  --mini-drink: #9de7ff;
+  position: relative;
+  display: inline-block;
+  width: 22px;
+  height: 31px;
+  clip-path: polygon(8% 0%, 92% 0%, 74% 100%, 26% 100%);
+  background:
+    linear-gradient(90deg, rgba(255,255,255,0.82), rgba(255,255,255,0.18) 45%, rgba(255,255,255,0.58)),
+    rgba(224, 238, 255, 0.5);
+  border: 2px solid rgba(50, 64, 100, 0.55);
+  border-top-width: 3px;
+  border-radius: 2px 2px 7px 7px;
+  overflow: hidden;
+  flex: 0 0 auto;
+}
+
+.mini-glass-liquid {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 0;
+  background: var(--mini-drink);
+}
+
+.mini-glass.is-filled .mini-glass-liquid {
+  height: 82%;
+}
+
+.fill-cup-stage {
+  max-width: min(310px, 92cqw);
+  padding: 36px 0 10px;
+  animation: serviceBeltPulse 1.8s ease-in-out infinite;
+}
+
+@keyframes serviceBeltPulse {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+
+.fill-cup {
+  max-width: 210px;
+  filter: drop-shadow(0 14px 16px rgba(35, 45, 78, 0.18));
+}
+
+.fill-cup.is-arriving {
+  animation: glassArrive 260ms ease both;
+}
+
+@keyframes glassArrive {
+  0% { transform: translateX(80px) scale(0.82); opacity: 0; }
+  100% { transform: translateX(0) scale(1); opacity: 1; }
+}
+
+.fill-cup-rim {
+  width: 86%;
+  height: 18px;
+  border-radius: 50%;
+  background:
+    radial-gradient(ellipse at center, rgba(255,255,255,0.96) 0 48%, rgba(210,226,247,0.76) 54%, rgba(82,100,138,0.5) 100%);
+  border: 2px solid rgba(48, 63, 101, 0.72);
+  box-shadow:
+    inset 0 2px 0 rgba(255,255,255,0.9),
+    0 3px 5px rgba(31, 43, 76, 0.16);
+  z-index: 7;
+}
+
+.fill-cup-body {
+  width: 78%;
+  min-height: clamp(154px, 38cqh, 232px);
+  clip-path: polygon(4% 0%, 96% 0%, 70% 100%, 30% 100%);
+  border: 0;
+  border-radius: 0 0 20px 20px;
+  background:
+    linear-gradient(90deg, rgba(255,255,255,0.86) 0 12%, rgba(225,240,255,0.24) 38%, rgba(255,255,255,0.5) 74%, rgba(170,194,230,0.3) 100%);
+  box-shadow:
+    inset 0 0 0 3px rgba(48, 63, 101, 0.58),
+    inset 12px 0 18px rgba(255,255,255,0.4),
+    inset -10px 0 16px rgba(54, 69, 112, 0.12);
+}
+
+.fill-cup-body::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background:
+    linear-gradient(100deg, rgba(255,255,255,0.62) 0 8%, transparent 24% 72%, rgba(255,255,255,0.34) 84% 94%, transparent 100%);
+}
+
+.fill-cup-body::before {
+  content: "";
+  position: absolute;
+  left: 9%;
+  right: 9%;
+  top: 3px;
+  height: 10px;
+  border-radius: 50%;
+  border-top: 2px solid rgba(65, 82, 122, 0.42);
+  border-left: 1px solid rgba(95, 112, 151, 0.22);
+  border-right: 1px solid rgba(95, 112, 151, 0.22);
+  z-index: 6;
+  pointer-events: none;
+}
+
+.glass-shine {
+  position: absolute;
+  top: 9%;
+  left: 18%;
+  width: 13%;
+  height: 62%;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.52);
+  z-index: 6;
+  pointer-events: none;
+}
+
+.fill-liquid {
+  left: 7%;
+  right: 7%;
+  bottom: 3%;
+  border-radius: 0 0 28px 28px;
+  transition: height 28ms linear;
+  box-shadow:
+    inset 0 10px 20px rgba(255,255,255,0.24),
+    inset 0 -14px 18px rgba(24, 34, 66, 0.22);
+}
+
+.fill-liquid::before {
+  height: 16px;
+  background:
+    radial-gradient(ellipse at center, rgba(255,255,255,0.62) 0%, rgba(255,255,255,0.18) 62%, rgba(255,255,255,0) 100%);
+  animation: fillWaveSurface 620ms ease-in-out infinite;
+}
+
+.fill-liquid::after {
+  content: "";
+  position: absolute;
+  inset: 12px 18% auto;
+  height: 80%;
+  background: radial-gradient(circle, rgba(255,255,255,0.5) 0 3px, transparent 4px);
+  background-size: 22px 28px;
+  opacity: 0.45;
+  animation: sodaBubbles 1.2s linear infinite;
+}
+
+@keyframes sodaBubbles {
+  from { transform: translateY(24px); }
+  to { transform: translateY(-28px); }
+}
+
+.fill-cup-zone {
+  left: 14%;
+  right: 14%;
+  z-index: 4;
+  background:
+    repeating-linear-gradient(-45deg, rgba(45,198,83,0.22), rgba(45,198,83,0.22) 6px, rgba(45,198,83,0.08) 6px, rgba(45,198,83,0.08) 12px);
+  border-bottom: 3px dashed rgba(24, 143, 78, 0.82);
+}
+
+.fill-cup-base {
+  width: 44%;
+  height: 10px;
+  margin-top: -4px;
+  border-radius: 0 0 14px 14px;
+  background: linear-gradient(180deg, #6d7fa1, #26334f);
+}
+
+.cup-variant-highball .fill-cup-rim,
+.cup-variant-rocks .fill-cup-rim,
+.cup-variant-pint .fill-cup-rim {
+  width: 88%;
+}
+
+.cup-variant-highball .fill-cup-body,
+.cup-variant-rocks .fill-cup-body,
+.cup-variant-pint .fill-cup-body {
+  width: 80%;
+  clip-path: polygon(2% 0%, 98% 0%, 70% 100%, 30% 100%);
+}
+
+.cup-variant-highball .fill-cup-body {
+  min-height: clamp(166px, 40cqh, 240px);
+}
+
+.cup-variant-rocks .fill-cup-body {
+  min-height: clamp(128px, 32cqh, 188px);
+}
+
+.cup-variant-pint .fill-cup-body {
+  min-height: clamp(156px, 38cqh, 226px);
+  width: 86%;
+  clip-path: polygon(2% 0%, 98% 0%, 66% 100%, 34% 100%);
+  border-radius: 0 0 14px 14px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 2px solid rgba(58, 74, 112, 0.64);
+  box-shadow: none;
+}
+
+.cup-variant-pint .fill-cup-rim {
+  width: 98%;
+  height: 16px;
+  border-radius: 999px;
+  border-color: rgba(58, 74, 112, 0.64);
+  box-shadow: none;
+}
+
+.cup-variant-pint .fill-cup-rim::after {
+  content: none;
+}
+
+.cup-variant-pint .fill-cup-body::before,
+.cup-variant-pint .fill-cup-body::after {
+  content: none;
+}
+
+.cup-variant-pint .glass-shine {
+  display: none;
+}
+
+.cup-variant-pint .fill-liquid {
+  left: 3%;
+  right: 3%;
+  bottom: 2%;
+  border-radius: 0 0 18px 18px;
+}
+
+.cup-variant-pint .fill-cup-zone {
+  left: 8%;
+  right: 8%;
+}
+
+.cup-variant-highball .fill-cup-base,
+.cup-variant-rocks .fill-cup-base,
+.cup-variant-pint .fill-cup-base {
+  width: 44%;
+}
+
+.cup-variant-pint .fill-cup-base {
+  width: 30%;
+  height: 8px;
+  border-radius: 0 0 10px 10px;
+}
+
+.fill-pour-stream {
+  top: -8px;
+  height: clamp(72px, 18cqh, 112px);
+  width: 18px;
+  border-radius: 999px;
+  background:
+    linear-gradient(90deg, rgba(255,255,255,0.55), transparent 38% 62%, rgba(255,255,255,0.28)),
+    var(--stream-color, #7cf0ff);
+  transform-origin: top center;
+  z-index: 8;
+}
+
+.stream-splash {
+  bottom: calc((var(--fill-pct, 0) * 1.45px) + 16px);
+  z-index: 9;
+}
+
+.fill-cup.is-in-zone .fill-cup-body {
+  box-shadow:
+    inset 0 0 0 4px rgba(45, 198, 83, 0.7),
+    0 0 0 5px rgba(45, 198, 83, 0.16),
+    0 16px 20px rgba(35, 45, 78, 0.18);
+}
+
+.fill-cup.is-danger .fill-cup-body {
+  box-shadow:
+    inset 0 0 0 4px rgba(255, 78, 78, 0.82),
+    0 0 0 5px rgba(255, 78, 78, 0.18),
+    0 16px 20px rgba(35, 45, 78, 0.18);
+}
+
+/* Fill machine cleanup and realism */
+.machine-levers {
+  right: 24px;
+}
+
+.machine-levers .machine-lever:not(:first-child) {
+  display: none;
+}
+
+.machine-title {
+  letter-spacing: 0.05em;
+}
+
+.fill-order-queue {
+  max-width: 88px;
+  padding: 8px 6px;
+}
+
+.queue-ticket {
+  justify-content: center;
+  padding: 5px;
+  min-width: 0;
+}
+
+.queue-ticket span:last-child {
+  display: none;
+}
+
+/* Keep tumbler geometry stable even if old inline styles exist */
+.fill-cup {
+  position: relative;
+  width: min(190px, 55cqw);
+  height: clamp(170px, 35cqh, 228px);
+}
+
+.fill-cup-rim {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.fill-cup-body {
+  position: absolute;
+  top: 12px;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.fill-cup-base {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.cup-variant-pint .fill-cup-body {
+  width: 86%;
+  clip-path: polygon(2% 0%, 98% 0%, 66% 100%, 34% 100%);
+}
+
+.cup-variant-pint .fill-liquid {
+  left: 4%;
+  right: 4%;
+  bottom: 2%;
+  border-radius: 0 0 14px 14px;
+}
+
+/* Final SVG-matched tumbler profile */
+.cup-variant-pint .fill-cup-rim {
+  width: 104%;
+  height: 22px;
+  border-radius: 999px;
+  background: radial-gradient(ellipse at center, #ffffff 0%, #e7edf7 62%, #a6b8d4 100%);
+  border: 2px solid rgba(58, 74, 112, 0.64);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.92);
+}
+
+.cup-variant-pint .fill-cup-body {
+  min-height: clamp(172px, 41cqh, 248px);
+  width: 90%;
+  clip-path: polygon(2% 0%, 98% 0%, 76% 100%, 24% 100%);
+  border-radius: 0 0 12px 12px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 2px solid rgba(58, 74, 112, 0.64);
+  box-shadow: none;
+}
+
+.cup-variant-pint .fill-liquid {
+  left: 6%;
+  right: 6%;
+  bottom: 2%;
+}
+
+.cup-variant-pint .fill-cup-zone {
+  left: 10%;
+  right: 10%;
+}
+
+.cup-variant-pint .fill-cup-base {
+  width: 40%;
+  height: 10px;
+  border-radius: 0 0 12px 12px;
+}
+
+/* More realistic flowing stream while holding */
+.fill-pour-stream {
+  top: -2px;
+  width: 14px;
+  height: clamp(86px, 20cqh, 120px);
+  border-radius: 10px;
+  background:
+    linear-gradient(90deg, rgba(255,255,255,0.65), rgba(255,255,255,0.08) 42%, rgba(255,255,255,0.45) 100%),
+    linear-gradient(180deg, rgba(210,245,255,0.95) 0%, var(--stream-color, #7cf0ff) 78%);
+  opacity: 0.86;
+  animation: pourFlow 110ms linear infinite;
+}
+
+.fill-cup-stage.is-pouring .fill-pour-stream::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -8px;
+  width: 18px;
+  height: 10px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: var(--stream-color, #7cf0ff);
+  filter: blur(2px);
+}
+
+@keyframes pourFlow {
+  0% { transform: translateX(-50%) scaleY(0.98); }
+  50% { transform: translateX(-50%) scaleY(1.04); }
+  100% { transform: translateX(-50%) scaleY(0.98); }
+}
+
+/* Real-world spill puddle on floor */
+.fill-floor-spill {
+  position: absolute;
+  left: 50%;
+  bottom: clamp(54px, 13cqh, 92px);
+  width: clamp(90px, 22cqw, 150px);
+  height: clamp(18px, 3.6cqh, 28px);
+  transform: translateX(-50%) scale(0.72);
+  transform-origin: center;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at center, var(--stream-color, #7cf0ff) 0%, rgba(124, 240, 255, 0.45) 58%, rgba(124, 240, 255, 0) 100%);
+  opacity: 0;
+  filter: blur(0.3px);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.fill-floor-spill.show {
+  animation: puddleSpread 900ms ease-out forwards;
+}
+
+@keyframes puddleSpread {
+  0% { opacity: 0; transform: translateX(-50%) scale(0.55); }
+  25% { opacity: 0.72; transform: translateX(-50%) scale(1); }
+  100% { opacity: 0.15; transform: translateX(-50%) scale(1.18); }
+}
+
+/* SVG tumbler shell with liquid animation inside */
+.fill-cup {
+  position: relative;
+  width: min(180px, 52cqw);
+  aspect-ratio: 124.761 / 215.57;
+  height: auto;
+  filter: drop-shadow(0 10px 14px rgba(26, 38, 68, 0.16));
+}
+
+.fill-cup-shell {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  z-index: 5;
+  pointer-events: none;
+}
+
+.fill-cup-rim,
+.fill-cup-base,
+.glass-shine {
+  display: none !important;
+}
+
+.fill-cup-body {
+  position: absolute !important;
+  inset: 0;
+  width: auto !important;
+  height: auto;
+  transform: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  z-index: 3;
+}
+
+.fill-cup-zone {
+  left: 22% !important;
+  right: 22% !important;
+  top: 22px;
+  z-index: 3;
+}
+
+.fill-liquid-mask {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  -webkit-mask-image: url("/src/games/fill-the-drink/tumbler-mask.svg");
+  mask-image: url("/src/games/fill-the-drink/tumbler-mask.svg");
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-position: center center;
+  mask-position: center center;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+
+.fill-liquid {
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  height: var(--fill-pct);
+  z-index: 2;
+  box-shadow: inset 0 7px 12px rgba(255, 255, 255, 0.26), inset 0 -9px 12px rgba(12, 24, 54, 0.24);
+}
+
+.fill-liquid::before {
+  height: 14px;
+  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.62) 0%, rgba(255, 255, 255, 0.2) 62%, rgba(255, 255, 255, 0) 100%);
+}
+
+.cup-variant-pint .fill-cup-body,
+.cup-variant-highball .fill-cup-body,
+.cup-variant-rocks .fill-cup-body {
+  inset: 0;
+}
+
+/* Final pour layering polish: stream stays behind tumbler frame */
+.fill-cup-shell {
+  z-index: 6;
+}
+
+.fill-pour-stream {
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 4;
+  opacity: 0.8;
+}
+
+.stream-splash {
+  z-index: 4;
+}
+
+/* Mobile polish for Fill the Drink layout */
+@media (max-width: 760px) {
+  body.is-playing .fill-drink-game {
+    gap: 8px;
+  }
+
+  body.is-playing .fill-drink-header {
+    gap: 8px;
+    justify-content: center;
+  }
+
+  body.is-playing .fill-drink-meta {
+    gap: 6px;
+    justify-content: center;
+  }
+
+  body.is-playing .fill-drink-meta p {
+    font-size: 0.74rem;
+    padding: 4px 8px;
+  }
+
+  .fill-drink-target-card {
+    padding: 7px 10px;
+  }
+
+  .fill-drink-target-card .target-hint {
+    font-size: 0.8rem;
+    line-height: 1.2;
+  }
+
+  .fill-drink-field {
+    padding-top: 88px;
+    border-radius: 18px;
+  }
+
+  .fill-vending-machine {
+    top: 6px;
+    width: min(280px, 90%);
+    min-height: 66px;
+    border-radius: 14px 14px 20px 20px;
+  }
+
+  .machine-title {
+    top: 7px;
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+  }
+
+  .machine-nozzle {
+    width: 34px;
+    height: 22px;
+    bottom: -15px;
+  }
+
+  .machine-nozzle::after {
+    width: 13px;
+    height: 10px;
+    bottom: -9px;
+  }
+
+  .machine-levers {
+    right: 12px;
+    bottom: 10px;
+  }
+
+  .machine-lever {
+    width: 11px;
+    height: 30px;
+  }
+
+  .machine-lever::after {
+    width: 20px;
+    height: 10px;
+  }
+
+  .fill-order-queue {
+    left: 8px;
+    bottom: 66px;
+    max-width: 56px;
+    padding: 6px 4px;
+    gap: 5px;
+  }
+
+  .fill-done-rail {
+    right: 8px;
+    bottom: 66px;
+    max-width: 56px;
+    min-height: 40px;
+    padding: 6px 4px;
+  }
+
+  .queue-ticket {
+    padding: 3px;
+  }
+
+  .mini-glass {
+    width: 16px;
+    height: 24px;
+    border-width: 1.5px;
+  }
+
+  .fill-cup-stage {
+    padding: 18px 0 8px;
+    max-width: min(220px, 70cqw);
+  }
+
+  .fill-cup {
+    width: min(132px, 42cqw);
+    height: auto;
+  }
+
+  .fill-pour-stream {
+    height: clamp(62px, 13cqh, 88px);
+    width: 10px;
+    top: -1px;
+  }
+
+  .fill-floor-spill {
+    bottom: 46px;
+    width: 86px;
+    height: 14px;
+  }
+
+  .fill-pour-button {
+    min-width: min(100%, 240px);
+    padding: 11px 18px;
+    font-size: 0.98rem;
+  }
+
+  .fill-drink-status {
+    font-size: 0.82rem;
+    min-height: 18px;
+  }
+}
+
+@media (max-width: 430px) {
+  .fill-drink-field {
+    padding-top: 82px;
+  }
+
+  .fill-vending-machine {
+    width: min(248px, 90%);
+    min-height: 60px;
+  }
+
+  .machine-title {
+    font-size: 0.64rem;
+  }
+
+  .fill-cup {
+    width: min(118px, 40cqw);
+    height: auto;
+  }
+
+  .fill-order-queue,
+  .fill-done-rail {
+    bottom: 58px;
+  }
 }

@@ -3,6 +3,7 @@
   let ctx = null;
   let masterGain = null;
   let muted = false;
+  const loops = new Map();
   try {
     muted = localStorage.getItem(STORAGE_KEY) === "off";
   } catch (_) {
@@ -69,6 +70,148 @@
     });
   }
 
+  function stopLoop(name) {
+    const loop = loops.get(name);
+    if (!loop) return;
+    loops.delete(name);
+    try {
+      loop.stop();
+    } catch (_) {
+      // ignore stop errors
+    }
+  }
+
+  function makeNoiseBuffer(c, seconds = 1.2) {
+    const frameCount = Math.max(1, Math.floor(c.sampleRate * seconds));
+    const buffer = c.createBuffer(1, frameCount, c.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < frameCount; i += 1) {
+      data[i] = (Math.random() * 2 - 1) * 0.55;
+    }
+    return buffer;
+  }
+
+  function startLoop(name) {
+    stopLoop(name);
+    if (muted) return;
+    const c = ensureContext();
+    if (!c) return;
+
+    const launch = () => {
+      if (name === "pour") {
+        const noise = c.createBufferSource();
+        noise.buffer = makeNoiseBuffer(c, 1.1);
+        noise.loop = true;
+
+        const noiseFilter = c.createBiquadFilter();
+        noiseFilter.type = "bandpass";
+        noiseFilter.frequency.value = 880;
+        noiseFilter.Q.value = 1.1;
+
+        const trickle = c.createOscillator();
+        trickle.type = "sine";
+        trickle.frequency.value = 420;
+
+        const trickleGain = c.createGain();
+        trickleGain.gain.value = 0.009;
+
+        const g = c.createGain();
+        g.gain.value = 0.05;
+
+        noise.connect(noiseFilter);
+        noiseFilter.connect(g);
+        trickle.connect(trickleGain);
+        trickleGain.connect(g);
+        g.connect(masterGain);
+
+        noise.start();
+        trickle.start();
+
+        loops.set(name, {
+          stop() {
+            const now = c.currentTime;
+            g.gain.cancelScheduledValues(now);
+            g.gain.setValueAtTime(g.gain.value, now);
+            g.gain.exponentialRampToValueAtTime(0.0001, now + 0.12);
+            noise.stop(now + 0.14);
+            trickle.stop(now + 0.14);
+            window.setTimeout(() => {
+              try {
+                noise.disconnect();
+                noiseFilter.disconnect();
+                trickle.disconnect();
+                trickleGain.disconnect();
+                g.disconnect();
+              } catch (_) {
+                // ignore disconnect errors
+              }
+            }, 220);
+          },
+        });
+        return;
+      }
+
+      if (name === "fillAmbience") {
+        const pad = c.createOscillator();
+        pad.type = "triangle";
+        pad.frequency.value = 196;
+
+        const shimmer = c.createOscillator();
+        shimmer.type = "sine";
+        shimmer.frequency.value = 294;
+
+        const lfo = c.createOscillator();
+        lfo.type = "sine";
+        lfo.frequency.value = 0.14;
+
+        const lfoGain = c.createGain();
+        lfoGain.gain.value = 14;
+
+        const g = c.createGain();
+        g.gain.value = 0.018;
+
+        lfo.connect(lfoGain);
+        lfoGain.connect(shimmer.frequency);
+        pad.connect(g);
+        shimmer.connect(g);
+        g.connect(masterGain);
+
+        pad.start();
+        shimmer.start();
+        lfo.start();
+
+        loops.set(name, {
+          stop() {
+            const now = c.currentTime;
+            g.gain.cancelScheduledValues(now);
+            g.gain.setValueAtTime(g.gain.value, now);
+            g.gain.exponentialRampToValueAtTime(0.0001, now + 0.28);
+            pad.stop(now + 0.3);
+            shimmer.stop(now + 0.3);
+            lfo.stop(now + 0.3);
+            window.setTimeout(() => {
+              try {
+                pad.disconnect();
+                shimmer.disconnect();
+                lfo.disconnect();
+                lfoGain.disconnect();
+                g.disconnect();
+              } catch (_) {
+                // ignore disconnect errors
+              }
+            }, 420);
+          },
+        });
+      }
+    };
+
+    if (c.state === "suspended") {
+      c.resume().then(launch).catch(() => {});
+      return;
+    }
+    launch();
+  }
+
   const sfx = {
     flip() {
       tone({ freq: 620, type: "sine", duration: 0.09, gain: 0.18, slideTo: 780, release: 0.05 });
@@ -108,6 +251,10 @@
     levelStart() {
       tone({ freq: 440, type: "sine", duration: 0.12, gain: 0.18 });
       tone({ freq: 660, type: "sine", duration: 0.14, gain: 0.16, delay: 0.1 });
+    },
+    pourTick() {
+      tone({ freq: 660, type: "triangle", duration: 0.045, gain: 0.018, slideTo: 560, release: 0.03 });
+      tone({ freq: 420, type: "sine", duration: 0.035, gain: 0.012, delay: 0.01, release: 0.02 });
     },
   };
 
@@ -187,6 +334,8 @@
   window.Playlab = window.Playlab || {};
   window.Playlab.audio = {
     play,
+    startLoop,
+    stopLoop,
     vibrate,
     setMuted,
     toggleMuted,

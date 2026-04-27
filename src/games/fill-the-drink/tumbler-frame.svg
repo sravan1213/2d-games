@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 124.761 215.57">
+  <defs>
+    <linearGradient id="capGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#b2b6bb"/>
+      <stop offset="100%" stop-color="#8f949a"/>
+    </linearGradient>
+  </defs>
+
+  <!-- top cap -->
+  <rect x="2.356" y="6.867" width="118.129" height="15.783" fill="url(#capGrad)"/>
+  <rect x="2.356" y="6.867" width="118.129" height="15.783" fill="none" stroke="#6f7378" stroke-width="1.4"/>
+
+  <!-- outer tumbler border -->
+  <path
+    d="M2.356,22.65 L5.62,88.988 L12.632,94.407 L21.618,203.212 C21.618,203.212 21.618,210.572 28.337,211.851 L94.504,211.851 C101.223,210.572 101.223,203.212 101.223,203.212 L110.209,94.407 L117.222,88.988 L120.485,22.65 Z"
+    fill="none"
+    stroke="#8a8f95"
+    stroke-width="2.2"
+    stroke-linejoin="round"
+  />
+
+  <!-- seam -->
+  <polygon points="5.62,88.988 12.632,94.407 110.209,94.407 117.222,88.988" fill="none" stroke="#a2a7ad" stroke-width="1.2"/>
+</svg>
