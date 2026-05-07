@@ -1,44 +1,17 @@
 (function () {
   const storage = window.Playlab && window.Playlab.storage;
+  const progress = window.Playlab && window.Playlab.progress;
   const gameRegistry = window.Playlab?.registry || [];
 
   const statsSummaryEl = document.getElementById("stats-summary");
   const statsGrid = document.getElementById("stats-grid");
   if (!statsSummaryEl || !statsGrid || !storage) return;
 
-  const STAR_THRESHOLDS = {
-    "memory-match": { level: [2, 4, 6, 9] },
-    "shape-sprint": { score: [6, 14, 24, 38] },
-    "color-pop": { level: [2, 4, 6, 9] },
-    "tap-rabbit": { score: [8, 20, 36, 56] },
-    "find-odd": { level: [3, 5, 8, 12] },
-    "shadow-match": { score: [6, 14, 24, 38] },
-    "count-stars": { level: [3, 5, 8, 12] },
-    "path-finder": { level: [3, 5, 8, 12] },
-    "fill-the-drink": { score: [40, 120, 260, 480] },
-  };
-
-  const LEVEL_GAMES = new Set([
-    "memory-match",
-    "color-pop",
-    "find-odd",
-    "count-stars",
-    "path-finder",
-  ]);
-
   function calcStars(gameId, stats) {
-    if (!stats || !stats.timesPlayed) return 0;
-    const t = STAR_THRESHOLDS[gameId];
-    const useLevel = LEVEL_GAMES.has(gameId);
-    const val = useLevel ? stats.bestLevel : stats.bestScore;
-    let stars = 1;
-    if (t && val != null) {
-      const arr = t.level || t.score || [];
-      for (let i = 0; i < arr.length; i++) {
-        if (val >= arr[i]) stars = i + 2;
-      }
+    if (progress && typeof progress.getStars === "function") {
+      return progress.getStars(gameId, stats);
     }
-    return Math.min(5, stars);
+    return stats && stats.timesPlayed ? 1 : 0;
   }
 
   function buildStars(count) {
@@ -84,10 +57,14 @@
         totalStars += calcStars(game.id, stats);
       }
     });
+    const coins = progress && typeof progress.getCoins === "function"
+      ? progress.getCoins()
+      : 0;
     const items = [
       { val: String(gamesPlayed), label: "Games Played" },
       { val: String(totalPlays), label: "Total Plays" },
       { val: String(totalStars), label: "Stars Earned" },
+      { val: String(coins), label: "Coins" },
     ];
     statsSummaryEl.innerHTML = "";
     items.forEach(({ val, label }) => {

@@ -88,6 +88,7 @@
   }
 
   const storage = window.Playlab && window.Playlab.storage;
+  const progress = window.Playlab && window.Playlab.progress;
 
   // ── Stats screen DOM refs ─────────────────────────────────────────
   const statsScreen = document.getElementById("stats-screen");
@@ -96,37 +97,11 @@
   const statsSummaryEl = document.getElementById("stats-summary");
   const statsGrid = document.getElementById("stats-grid");
 
-  // ── Star-rating thresholds per game ──────────────────────────────
-  // Each array: [2-star-min, 3-star-min, 4-star-min, 5-star-min]
-  // 1 star is granted for just playing once.
-  const STAR_THRESHOLDS = {
-    "memory-match": { level: [2, 4, 6, 9] },
-    "shape-sprint": { score: [6, 14, 24, 38] },
-    "color-pop":    { level: [2, 4, 6, 9] },
-    "tap-rabbit":   { score: [8, 20, 36, 56] },
-    "find-odd":     { level: [3, 5, 8, 12] },
-    "shadow-match": { score: [6, 14, 24, 38] },
-    "count-stars":  { level: [3, 5, 8, 12] },
-    "path-finder":  { level: [3, 5, 8, 12] },
-    "fill-the-drink": { score: [40, 120, 260, 480] },
-  };
-
-  // Games that display level as primary metric on the dashboard
-  const LEVEL_GAMES = new Set(["memory-match", "color-pop", "find-odd", "count-stars", "path-finder"]);
-
   function calcStars(gameId, stats) {
-    if (!stats || !stats.timesPlayed) return 0;
-    const t = STAR_THRESHOLDS[gameId];
-    const useLvl = LEVEL_GAMES.has(gameId);
-    const val = useLvl ? stats.bestLevel : stats.bestScore;
-    let stars = 1;
-    if (t && val != null) {
-      const arr = t.level || t.score || [];
-      for (let i = 0; i < arr.length; i++) {
-        if (val >= arr[i]) stars = i + 2;
-      }
+    if (progress && typeof progress.getStars === "function") {
+      return progress.getStars(gameId, stats);
     }
-    return Math.min(5, stars);
+    return stats && stats.timesPlayed ? 1 : 0;
   }
 
   function renderSummary() {
@@ -145,10 +120,14 @@
     });
 
     statsSummaryEl.innerHTML = "";
+    const coins = progress && typeof progress.getCoins === "function"
+      ? progress.getCoins()
+      : 0;
     const items = [
       { val: `${gamesPlayed}`, label: "Games Played" },
       { val: `${totalPlays}`, label: "Total Plays" },
       { val: `${totalStars}`, label: "Stars Earned" },
+      { val: `${coins}`, label: "Coins" },
     ];
     items.forEach(({ val, label }) => {
       const div = document.createElement("div");
@@ -364,7 +343,17 @@
 
     const frag = document.createDocumentFragment();
 
-    gameRegistry.forEach((game) => {
+    const landingGames = gameRegistry
+      .filter((game) => !game.hiddenOnLanding)
+      .map((game, index) => ({ game, index }))
+      .sort((a, b) => {
+        const priorityA = a.game.landingPriority || 0;
+        const priorityB = b.game.landingPriority || 0;
+        return priorityA - priorityB || a.index - b.index;
+      })
+      .map(({ game }) => game);
+
+    landingGames.forEach((game) => {
       const card = game.comingSoon
         ? document.createElement("article")
         : document.createElement("a");

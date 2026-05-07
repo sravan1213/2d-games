@@ -1,10 +1,11 @@
-const CACHE_VERSION = "playlab-v23";
+const CACHE_VERSION = "playlab-v32";
 const CORE_ASSETS = [
   "./",
   "./index.html",
   "./stats.html",
   "./styles.css",
   "./src/sound.js",
+  "./src/progress.js",
   "./src/app.js",
   "./src/stats-page.js",
   "./src/games/registry.js",
@@ -17,6 +18,7 @@ const CORE_ASSETS = [
   "./src/games/count-stars/createCountStarsGame.js",
   "./src/games/path-finder/createPathFinderGame.js",
   "./src/games/fill-the-drink/createFillTheDrinkGame.js",
+  "./src/games/suggested/createSuggestedGames.js",
   "./games/memory-match/index.html",
   "./games/shape-sprint/index.html",
   "./games/color-pop/index.html",
@@ -26,6 +28,12 @@ const CORE_ASSETS = [
   "./games/count-stars/index.html",
   "./games/path-finder/index.html",
   "./games/fill-the-drink/index.html",
+  "./games/pattern-parade/index.html",
+  "./games/number-train/index.html",
+  "./games/bubble-letters/index.html",
+  "./games/tiny-builder/index.html",
+  "./games/music-maker/index.html",
+  "./games/sorting-shelf/index.html",
   "./sitemap.xml",
   "./robots.txt",
   "./manifest.webmanifest",
@@ -75,6 +83,22 @@ self.addEventListener("fetch", (event) => {
           return response;
         })
         .catch(() => caches.match("./index.html"))
+    );
+    return;
+  }
+
+  if (request.destination === "script" || request.destination === "style") {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          if (!response || response.status !== 200 || response.type !== "basic") {
+            return response;
+          }
+          const copy = response.clone();
+          caches.open(CACHE_VERSION).then((cache) => cache.put(request, copy));
+          return response;
+        })
+        .catch(() => caches.match(request))
     );
     return;
   }

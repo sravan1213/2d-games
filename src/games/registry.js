@@ -8,6 +8,7 @@
   const countStarsGame = window.Playlab?.games?.countStars?.createCountStarsGame;
   const pathFinderGame = window.Playlab?.games?.pathFinder?.createPathFinderGame;
   const fillTheDrinkGame = window.Playlab?.games?.fillTheDrink?.createFillTheDrinkGame;
+  const suggestedGames = window.Playlab?.games?.suggested || {};
 
   const gameRegistry = [
     {
@@ -119,6 +120,78 @@
       status: "Coming Soon",
       theme: { from: "#4ad18a", to: "#3ecfc0" },
       comingSoon: true,
+    },
+    {
+      id: "pattern-parade",
+      name: "Pattern Parade",
+      tagline: "Finish the sequence",
+      description: "Spot the pattern and choose what comes next with shapes, colors, and silly icons.",
+      icon: "🔁",
+      tags: ["Ages 5+", "Logic"],
+      status: "Suggested",
+      theme: { from: "#ff6fb5", to: "#ffb54c" },
+      hiddenOnLanding: true,
+      launch: suggestedGames.createPatternParadeGame,
+    },
+    {
+      id: "number-train",
+      name: "Number Train",
+      tagline: "Order the numbers",
+      description: "Drag train cars into the right number order and help the little train roll away.",
+      icon: "🚂",
+      tags: ["Ages 4+", "Numbers"],
+      status: "Suggested",
+      theme: { from: "#3ecfc0", to: "#5f8bff" },
+      landingPriority: -1,
+      launch: suggestedGames.createNumberTrainGame,
+    },
+    {
+      id: "bubble-letters",
+      name: "Bubble Letters",
+      tagline: "Pop the right letter",
+      description: "Hear or see a letter, then pop the matching bubble before it floats away.",
+      icon: "🔤",
+      tags: ["Ages 4+", "Letters"],
+      status: "Suggested",
+      theme: { from: "#7c5cff", to: "#3ecfc0" },
+      hiddenOnLanding: true,
+      launch: suggestedGames.createBubbleLettersGame,
+    },
+    {
+      id: "tiny-builder",
+      name: "Tiny Builder",
+      tagline: "Stack and balance",
+      description: "Stack blocks, match outlines, and build cheerful little towers without tipping them.",
+      icon: "🧱",
+      tags: ["Ages 5+", "Balance"],
+      status: "Suggested",
+      theme: { from: "#ff8c6b", to: "#ffb54c" },
+      hiddenOnLanding: true,
+      launch: suggestedGames.createTinyBuilderGame,
+    },
+    {
+      id: "music-maker",
+      name: "Music Maker",
+      tagline: "Copy the tune",
+      description: "Listen to short musical patterns and tap the notes back in the same order.",
+      icon: "🎵",
+      tags: ["Ages 4+", "Memory"],
+      status: "Suggested",
+      theme: { from: "#4ad18a", to: "#7c5cff" },
+      hiddenOnLanding: true,
+      launch: suggestedGames.createMusicMakerGame,
+    },
+    {
+      id: "sorting-shelf",
+      name: "Sorting Shelf",
+      tagline: "Group matching things",
+      description: "Sort toys, foods, shapes, and colors onto the right shelves.",
+      icon: "🧺",
+      tags: ["Ages 4+", "Sorting"],
+      status: "Suggested",
+      theme: { from: "#ffb54c", to: "#4ad18a" },
+      hiddenOnLanding: true,
+      launch: suggestedGames.createSortingShelfGame,
     },
   ];
 
