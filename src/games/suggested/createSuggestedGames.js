@@ -318,7 +318,11 @@
         const start = randInt(1, 15);
         const numbers = Array.from({ length: count }, (_, i) => start + i);
         const placed = new Array(count).fill(null);
+        const hasCoarsePointer = window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
+        const supportsPointerEvents = "PointerEvent" in window;
         let selectedButton = null;
+        let dragState = null;
+        let suppressNextClick = false;
 
         function wagonHtml(num, extraClass = "") {
           return `
@@ -332,6 +336,135 @@
         function clearSelection() {
           if (selectedButton) selectedButton.classList.remove("is-selected");
           selectedButton = null;
+        }
+
+        function setClickSuppression() {
+          suppressNextClick = true;
+          window.setTimeout(() => {
+            suppressNextClick = false;
+          }, 420);
+        }
+
+        function selectWagon(button, num) {
+          if (!button || button.disabled) return;
+          const a = audio();
+          if (a) a.play("tap", { vibrate: false });
+          clearSelection();
+          selectedButton = button;
+          button.classList.add("is-selected");
+          setStatus(`Place ${num} into its matching wagon spot.`, null);
+        }
+
+        function clearReadySlots() {
+          ui.board.querySelectorAll(".train-slot.is-ready").forEach((slot) => {
+            slot.classList.remove("is-ready");
+          });
+        }
+
+        function slotFromPoint(x, y) {
+          const element = document.elementFromPoint(x, y);
+          const slot = element && element.closest && element.closest(".train-slot");
+          if (!slot || placed[Number(slot.dataset.index)] != null) return null;
+          return slot;
+        }
+
+        function createDragGhost(button) {
+          const rect = button.getBoundingClientRect();
+          const rootStyles = window.getComputedStyle(ui.root);
+          const ghost = button.cloneNode(true);
+          ghost.classList.add("train-drag-ghost");
+          ghost.style.width = `${rect.width}px`;
+          ghost.style.height = `${rect.height}px`;
+          ghost.style.setProperty("--wagon-emoji", rootStyles.getPropertyValue("--wagon-emoji"));
+          ghost.style.setProperty("--wagon-number-font", rootStyles.getPropertyValue("--wagon-number-font"));
+          document.body.appendChild(ghost);
+          return ghost;
+        }
+
+        function moveDragGhost(x, y) {
+          if (!dragState || !dragState.ghost) return;
+          dragState.ghost.style.transform =
+            `translate3d(${x - dragState.width / 2}px, ${y - dragState.height / 2}px, 0) scale(1.08)`;
+        }
+
+        function updateDragTarget(x, y) {
+          if (!dragState) return;
+          clearReadySlots();
+          const slot = slotFromPoint(x, y);
+          if (slot) slot.classList.add("is-ready");
+          dragState.currentSlot = slot;
+        }
+
+        function beginCustomDrag(button, value, x, y, pointerId) {
+          if (!button || button.disabled) return;
+          const rect = button.getBoundingClientRect();
+          dragState = {
+            button,
+            value,
+            pointerId,
+            startX: x,
+            startY: y,
+            width: rect.width,
+            height: rect.height,
+            moved: false,
+            ghost: null,
+            currentSlot: null,
+          };
+        }
+
+        function moveCustomDrag(x, y) {
+          if (!dragState) return;
+          const distance = Math.hypot(x - dragState.startX, y - dragState.startY);
+          if (!dragState.moved && distance < 7) return;
+          if (!dragState.moved) {
+            dragState.moved = true;
+            clearSelection();
+            selectedButton = dragState.button;
+            dragState.button.classList.add("is-selected", "is-dragging");
+            dragState.ghost = createDragGhost(dragState.button);
+            const a = audio();
+            if (a) a.play("tap", { vibrate: false });
+          }
+          moveDragGhost(x, y);
+          updateDragTarget(x, y);
+        }
+
+        function finishCustomDrag(x, y) {
+          if (!dragState) return;
+          const state = dragState;
+          const value = state.value;
+          const button = state.button;
+          const moved = state.moved;
+          const slot = moved ? slotFromPoint(x, y) : null;
+
+          if (state.ghost) state.ghost.remove();
+          button.classList.remove("is-dragging");
+          clearReadySlots();
+          dragState = null;
+
+          if (!moved) {
+            selectWagon(button, value);
+            return;
+          }
+
+          setClickSuppression();
+
+          if (slot) {
+            handlePlace(slot, Number(slot.dataset.index), button, value);
+            return;
+          }
+
+          clearSelection();
+          setStatus("Drop the wagon on an empty train spot.", "warn");
+        }
+
+        function cancelCustomDrag() {
+          if (!dragState) return;
+          if (dragState.ghost) dragState.ghost.remove();
+          dragState.button.classList.remove("is-dragging");
+          dragState = null;
+          clearReadySlots();
+          clearSelection();
         }
 
         function handlePlace(slot, slotIndex, sourceButton, value) {
@@ -389,18 +522,16 @@
           const button = document.createElement("button");
           button.type = "button";
           button.className = "number-card train-source";
-          button.draggable = true;
           button.dataset.value = String(num);
           button.setAttribute("aria-label", `Number ${num} wagon`);
           button.innerHTML = wagonHtml(num);
-          button.addEventListener("click", () => {
-            if (button.disabled) return;
-            const a = audio();
-            if (a) a.play("tap", { vibrate: false });
-            clearSelection();
-            selectedButton = button;
-            button.classList.add("is-selected");
-            setStatus(`Place ${num} into its matching wagon spot.`, null);
+          button.draggable = !hasCoarsePointer;
+          button.addEventListener("click", (event) => {
+            if (suppressNextClick) {
+              event.preventDefault();
+              return;
+            }
+            selectWagon(button, num);
           });
           button.addEventListener("dragstart", (event) => {
             if (button.disabled) return;
@@ -413,6 +544,50 @@
           button.addEventListener("dragend", () => {
             if (selectedButton === button) clearSelection();
           });
+          if (supportsPointerEvents) {
+            button.addEventListener("pointerdown", (event) => {
+              if (button.disabled || event.pointerType === "mouse") return;
+              event.preventDefault();
+              beginCustomDrag(button, String(num), event.clientX, event.clientY, event.pointerId);
+              if (button.setPointerCapture) button.setPointerCapture(event.pointerId);
+            });
+            button.addEventListener("pointermove", (event) => {
+              if (!dragState || dragState.pointerId !== event.pointerId) return;
+              event.preventDefault();
+              moveCustomDrag(event.clientX, event.clientY);
+            });
+            button.addEventListener("pointerup", (event) => {
+              if (!dragState || dragState.pointerId !== event.pointerId) return;
+              event.preventDefault();
+              finishCustomDrag(event.clientX, event.clientY);
+            });
+            button.addEventListener("pointercancel", (event) => {
+              if (!dragState || dragState.pointerId !== event.pointerId) return;
+              cancelCustomDrag();
+            });
+          } else {
+            button.addEventListener("touchstart", (event) => {
+              if (button.disabled || !event.changedTouches.length) return;
+              const touch = event.changedTouches[0];
+              event.preventDefault();
+              beginCustomDrag(button, String(num), touch.clientX, touch.clientY, touch.identifier);
+            }, { passive: false });
+            button.addEventListener("touchmove", (event) => {
+              if (!dragState) return;
+              const touch = Array.from(event.changedTouches).find((item) => item.identifier === dragState.pointerId);
+              if (!touch) return;
+              event.preventDefault();
+              moveCustomDrag(touch.clientX, touch.clientY);
+            }, { passive: false });
+            button.addEventListener("touchend", (event) => {
+              if (!dragState) return;
+              const touch = Array.from(event.changedTouches).find((item) => item.identifier === dragState.pointerId);
+              if (!touch) return;
+              event.preventDefault();
+              finishCustomDrag(touch.clientX, touch.clientY);
+            }, { passive: false });
+            button.addEventListener("touchcancel", cancelCustomDrag, { passive: false });
+          }
           pool.appendChild(button);
         });
 
@@ -426,7 +601,11 @@
             <span class="slot-ghost" aria-hidden="true">🚃</span>
             <span class="slot-order">${index + 1}</span>
           `;
-          slot.addEventListener("click", () => {
+          slot.addEventListener("click", (event) => {
+            if (suppressNextClick) {
+              event.preventDefault();
+              return;
+            }
             if (!selectedButton) {
               setStatus("Pick a number wagon from the top first.", null);
               return;
@@ -448,10 +627,9 @@
           });
           track.appendChild(slot);
         });
-        const hasCoarsePointer = window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
         setStatus(
           hasCoarsePointer
-            ? "Tap a wagon, then tap the matching empty spot below."
+            ? "Drag or tap each wagon onto the track."
             : "Drag the wagons onto the track in order.",
           null
         );
